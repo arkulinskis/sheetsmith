@@ -1,0 +1,9 @@
+#!/bin/sh
+# {{TITLE}}: start the app's server (Mac: double-click start.command; Linux / Raspberry Pi: sh start.sh)
+cd "$(dirname "$0")" || exit 1
+if command -v python3 >/dev/null 2>&1; then exec python3 server.py "$@"; fi
+if command -v python >/dev/null 2>&1; then exec python server.py "$@"; fi
+echo ""
+echo "  Python 3 isn't installed yet. Get it from https://www.python.org/downloads/"
+echo ""
+read -r _ 2>/dev/null

@@ -1,0 +1,688 @@
+#!/usr/bin/env python3
+"""The server for an app made by Sheetsmith: share it with every phone and computer on your network.
+
+    python server.py                 start (opens your browser; prints the address for other devices)
+    python server.py --port 9000     use another port          python server.py --no-browser
+    python server.py --pin 4821      ask for a PIN             python server.py --reset   (back to the workbook's data)
+
+Needs Python 3.8 or newer and nothing else. Everything stays on this computer:
+    index.html          the app itself (made by Sheetsmith; also works on its own, saving in one browser)
+    data/app.db         the data everyone shares (SQLite)
+    data/backups/       a copy of the data every day (the last 30 are kept)
+Anyone who can reach this computer on the network can open the app, so use it on networks you trust
+(home, office, workshop) and set a PIN if you want to keep it to your team.
+"""
+import argparse
+import datetime as dt
+import hashlib
+import hmac
+import io
+import json
+import os
+import re
+import secrets
+import socket
+import sqlite3
+import sys
+import threading
+import time
+import webbrowser
+import zipfile
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import parse_qs, urlparse
+from xml.sax.saxutils import escape
+
+CONFIG = {}  # filled in by Sheetsmith: title, port, pin, built
+HERE = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(HERE, "data")
+DB_PATH = os.path.join(DATA_DIR, "app.db")
+LOCK = threading.RLock()
+STARTED = dt.datetime.now()
+CLIENTS = {}
+SECRET = secrets.token_hex(16)
+
+
+# --------------------------------------------------------------------------------------------- the app file
+def read_app():
+    with open(os.path.join(HERE, "index.html"), "rb") as f:
+        html = f.read()
+    m = re.search(rb'<script id="ss-data" type="application/json">(.*?)</script>', html, re.S)
+    if not m:
+        sys.exit("index.html doesn't look like a Sheetsmith app (no ss-data block). Download it again from Sheetsmith.")
+    return html, json.loads(m.group(1).decode("utf-8"))
+
+
+# --------------------------------------------------------------------------------------------- references
+def col_index(s):
+    n = 0
+    for ch in s.upper():
+        n = n * 26 + ord(ch) - 64
+    return n
+
+
+def col_letters(n):
+    s = ""
+    while n > 0:
+        n, r = divmod(n - 1, 26)
+        s = chr(65 + r) + s
+    return s
+
+
+def parse_ref(a):
+    m = re.match(r"^\$?([A-Za-z]{1,3})\$?(\d+)$", a or "")
+    return (int(m.group(2)), col_index(m.group(1))) if m else None
+
+
+def parse_area(t):
+    p = (t or "").replace("$", "").split(":")
+    a, b = parse_ref(p[0]), parse_ref(p[-1])
+    if not a or not b:
+        return None
+    return min(a[0], b[0]), min(a[1], b[1]), max(a[0], b[0]), max(a[1], b[1])
+
+
+TOKEN = re.compile(r'"(?:[^"]|"")*"|\'(?:[^\']|\'\')*\'!|\[[^\]]*\]|(\$?)([A-Z]{1,3})(\$?)(\d+)(?![A-Za-z0-9_(.!\[])|[A-Za-z_][A-Za-z0-9_.]*', re.I)
+
+
+def shift_formula(f, dr, dc):
+    if not dr and not dc:
+        return f
+
+    def rep(m):
+        if m.group(4) is None:
+            return m.group(0)
+        if m.start() > 0 and (f[m.start() - 1].isalnum() or f[m.start() - 1] in "_."):
+            return m.group(0)
+        c, r = col_index(m.group(2)), int(m.group(4))
+        if not m.group(1):
+            c += dc
+        if not m.group(3):
+            r += dr
+        return "#REF!" if c < 1 or r < 1 else "%s%s%s%s" % (m.group(1), col_letters(c), m.group(3), r)
+    return TOKEN.sub(rep, f)
+
+
+# --------------------------------------------------------------------------------------------- changes (same rules as the app's SE.applyOp)
+def _cell(cur, op):
+    cell = {}
+    if cur and cur.get("s") is not None:
+        cell["s"] = cur["s"]
+    if op.get("f"):
+        cell["f"] = op["f"]
+    elif op.get("v") not in (None, ""):
+        cell["v"] = op["v"]
+    if op.get("z"):
+        cell["z"] = op["z"]
+    elif cur and cur.get("z"):
+        cell["z"] = cur["z"]
+    return cell
+
+
+def apply_op(state, op):
+    t = op.get("t")
+    tables = state.setdefault("tables", {})
+    if t == "cell":
+        sc = state["sheets"].get(op.get("s"))
+        if sc is None or not parse_ref(op.get("a")):
+            return False
+        cell = _cell(sc["cells"].get(op["a"]), op)
+        if "v" not in cell and "f" not in cell and "s" not in cell and "z" not in cell:
+            sc["cells"].pop(op["a"], None)
+        else:
+            sc["cells"][op["a"]] = cell
+        return True
+    if t == "radd":
+        tb = tables.get(op.get("tb"))
+        if tb is None or not op.get("id") or any(r["id"] == op["id"] for r in tb["rows"]):
+            return False
+        row = {"id": str(op["id"])[:40], "c": [dict(x) if isinstance(x, dict) else None for x in (op.get("c") or [])]}
+        idx = next((i for i, r in enumerate(tb["rows"]) if r["id"] == op.get("after")), -1) if op.get("after") else -1
+        if op.get("at") == 0:
+            tb["rows"].insert(0, row)
+        elif idx >= 0:
+            tb["rows"].insert(idx + 1, row)
+        else:
+            tb["rows"].append(row)
+        return True
+    if t == "rset":
+        tb = tables.get(op.get("tb"))
+        row = next((r for r in tb["rows"] if r["id"] == op.get("id")), None) if tb else None
+        ci = op.get("ci")
+        if row is None or not isinstance(ci, int) or ci < 0 or ci > 500:
+            return False
+        while len(row["c"]) <= ci:
+            row["c"].append(None)
+        cell = _cell(row["c"][ci], op)
+        row["c"][ci] = cell if cell else None
+        return True
+    if t == "rdel":
+        tb = tables.get(op.get("tb"))
+        if tb is None:
+            return False
+        n = len(tb["rows"])
+        tb["rows"] = [r for r in tb["rows"] if r["id"] != op.get("id")]
+        return len(tb["rows"]) != n
+    if t == "rorder":
+        tb = tables.get(op.get("tb"))
+        if tb is None:
+            return False
+        pos = {i: k for k, i in enumerate(op.get("ids") or [])}
+        tb["rows"].sort(key=lambda r: pos.get(r["id"], 10 ** 9))
+        return True
+    if t in ("rowsdel", "rowsins"):
+        sc = state["sheets"].get(op.get("s"))
+        r0, n = int(op.get("r") or 0), max(1, int(op.get("n") or 1))
+        if sc is None or r0 < 1:
+            return False
+        moved = {}
+        for a, cell in sc["cells"].items():
+            p = parse_ref(a)
+            if not p:
+                continue
+            r, c = p
+            if t == "rowsdel":
+                if r0 <= r < r0 + n:
+                    continue
+                moved[col_letters(c) + str(r - n if r >= r0 + n else r)] = cell
+            else:
+                moved[col_letters(c) + str(r + n if r >= r0 else r)] = cell
+        sc["cells"] = moved
+        return True
+    return False
+
+
+def short(v):
+    if v is None or v == "":
+        return "(empty)"
+    s = str(v)
+    return s if len(s) <= 40 else s[:38] + "…"
+
+
+def describe(op, bp):
+    t = op.get("t")
+    tables = {x["name"]: x for x in bp.get("tables", [])}
+    if t == "cell":
+        return "changed %s!%s to %s" % (op.get("s"), op.get("a"), "=" + op["f"] if op.get("f") else short(op.get("v")))
+    if t == "radd":
+        return "added a row to %s" % op.get("tb")
+    if t == "rset":
+        tb = tables.get(op.get("tb"))
+        col = tb["columns"][op["ci"]]["name"] if tb and op.get("ci", 99) < len(tb["columns"]) else "a column"
+        return "set %s › %s to %s" % (op.get("tb"), col, "=" + op["f"] if op.get("f") else short(op.get("v")))
+    if t == "rdel":
+        return "deleted a row from %s" % op.get("tb")
+    if t == "rorder":
+        return "sorted %s" % op.get("tb")
+    if t == "rowsdel":
+        return "deleted row %s on %s" % (op.get("r"), op.get("s"))
+    if t == "rowsins":
+        return "inserted a row at %s on %s" % (op.get("r"), op.get("s"))
+    return "made a change"
+
+
+# --------------------------------------------------------------------------------------------- storage
+class Store(object):
+    def __init__(self, seed, reset=False):
+        os.makedirs(os.path.join(DATA_DIR, "backups"), exist_ok=True)
+        self.db = sqlite3.connect(DB_PATH, check_same_thread=False)
+        self.db.execute("PRAGMA journal_mode=WAL")
+        self.db.execute("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT)")
+        self.db.execute("CREATE TABLE IF NOT EXISTS log (id INTEGER PRIMARY KEY AUTOINCREMENT, rev INTEGER, at TEXT, who TEXT, text TEXT)")
+        self.db.commit()
+        row = self.db.execute("SELECT v FROM kv WHERE k='state'").fetchone()
+        built = self.db.execute("SELECT v FROM kv WHERE k='built'").fetchone()
+        if reset or row is None:
+            if row is not None:
+                self.backup(json.loads(row[0]), "before-reset")
+            self.state, self.rev = json.loads(json.dumps(seed)), 1
+            self.save()
+            self.db.execute("DELETE FROM log")
+            self.db.execute("INSERT OR REPLACE INTO kv VALUES ('built', ?)", (CONFIG.get("built") or "",))
+            self.db.commit()
+        else:
+            self.state = json.loads(row[0])
+            self.rev = int(self.db.execute("SELECT v FROM kv WHERE k='rev'").fetchone()[0])
+            if built and built[0] != (CONFIG.get("built") or ""):
+                print("  Note: this is a newer download of the app; your data was kept. (python server.py --reset starts over.)")
+                self.adopt_structure(seed)
+                self.db.execute("INSERT OR REPLACE INTO kv VALUES ('built', ?)", (CONFIG.get("built") or "",))
+                self.db.commit()
+        self.daily_backup()
+
+    def adopt_structure(self, seed):
+        """A new download may add sheets or tables: add them empty, keep everything that's there."""
+        for name, sh in seed.get("sheets", {}).items():
+            self.state["sheets"].setdefault(name, sh)
+        for name, tb in seed.get("tables", {}).items():
+            self.state.setdefault("tables", {}).setdefault(name, tb)
+        self.save()
+
+    def save(self):
+        self.db.execute("INSERT OR REPLACE INTO kv VALUES ('state', ?)", (json.dumps(self.state, separators=(",", ":")),))
+        self.db.execute("INSERT OR REPLACE INTO kv VALUES ('rev', ?)", (str(self.rev),))
+        self.db.commit()
+
+    def backup(self, state=None, tag=None):
+        name = "state-%s%s.json" % (dt.date.today().isoformat(), "-" + tag if tag else "")
+        with open(os.path.join(DATA_DIR, "backups", name), "w", encoding="utf-8") as f:
+            json.dump(state or self.state, f)
+        files = sorted(x for x in os.listdir(os.path.join(DATA_DIR, "backups")) if x.startswith("state-"))
+        for old in files[:-30]:
+            try:
+                os.remove(os.path.join(DATA_DIR, "backups", old))
+            except OSError:
+                pass
+
+    def daily_backup(self):
+        if not os.path.exists(os.path.join(DATA_DIR, "backups", "state-%s.json" % dt.date.today().isoformat())):
+            self.backup()
+
+    def apply(self, ops, who, bp):
+        texts = []
+        changed = False
+        for op in ops[:5000]:
+            if isinstance(op, dict) and apply_op(self.state, op):
+                changed = True
+                texts.append(describe(op, bp))
+        if changed:
+            self.rev += 1
+            self.save()
+            now = dt.datetime.now().isoformat(timespec="seconds")
+            rows = texts if len(texts) <= 12 else ["made %d changes (%s, ...)" % (len(texts), "; ".join(dict.fromkeys(texts[:3])))]
+            for t in rows:
+                self.db.execute("INSERT INTO log (rev, at, who, text) VALUES (?, ?, ?, ?)", (self.rev, now, who, t))
+            self.db.commit()
+            self.daily_backup()
+        return changed
+
+    def log(self, limit):
+        rows = self.db.execute("SELECT rev, at, who, text FROM log ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
+        return [{"rev": r[0], "at": r[1], "who": r[2], "text": r[3]} for r in rows]
+
+
+# --------------------------------------------------------------------------------------------- Excel export
+NEW_FUNCS = ("XLOOKUP", "XMATCH", "IFS", "SWITCH", "TEXTJOIN", "CONCAT", "MAXIFS", "MINIFS", "IFNA", "DAYS", "STDEV.S", "STDEV.P", "RANK.EQ",
+             "CEILING.MATH", "FLOOR.MATH", "NUMBERVALUE", "TEXTBEFORE", "TEXTAFTER", "AGGREGATE", "XOR")
+WS_FUNCS = ("FILTER", "SORT", "UNIQUE")
+NEW_RE = re.compile(r"(?<![A-Za-z0-9_.])(%s)\(" % "|".join(re.escape(f) for f in NEW_FUNCS + WS_FUNCS), re.I)
+THIS_ROW = re.compile(r"([A-Za-z_\\][\w.]*)?\[@(?:\[((?:[^\]']|'.)*)\]|((?:[^\[\]']|'.)*))\]")
+
+
+def file_formula(f, table=None):
+    """A formula as Excel stores it in a file: [@Qty] -> Orders[[#This Row],[Qty]], XLOOKUP -> _xlfn.XLOOKUP."""
+    out, parts = [], re.split(r'("(?:[^"]|"")*")', f)
+    for i, part in enumerate(parts):
+        if i % 2:
+            out.append(part)
+            continue
+        part = NEW_RE.sub(lambda m: ("_xlfn._xlws." if m.group(1).upper() in WS_FUNCS else "_xlfn.") + m.group(1).upper() + "(", part)
+        part = THIS_ROW.sub(lambda m: "%s[[#This Row],[%s]]" % (m.group(1) or table or "Table1", m.group(2) if m.group(2) is not None else m.group(3)), part)
+        out.append(part)
+    return "".join(out)
+
+
+def export_xlsx(state, bp):
+    styles = bp.get("styles") or []
+    fmts, xfs = {}, [(0, False)]
+
+    def xf(fmt, bold=False):
+        fid = 0
+        if fmt and fmt != "General":
+            builtin = {"0": 1, "0.00": 2, "#,##0": 3, "#,##0.00": 4, "0%": 9, "0.00%": 10}
+            fid = builtin.get(fmt) or fmts.setdefault(fmt, 164 + len(fmts))
+        key = (fid, bold)
+        if key not in xfs:
+            xfs.append(key)
+        return xfs.index(key)
+
+    def cell_fmt(c):
+        if not c:
+            return None
+        if c.get("z"):
+            return c["z"]
+        s = c.get("s")
+        if isinstance(s, int) and 0 <= s < len(styles):
+            return (styles[s] or {}).get("z")
+        return None
+
+    strings, sidx = [], {}  # text goes in a shared-strings table, like Excel writes it
+
+    def sst(text):
+        if text not in sidx:
+            sidx[text] = len(strings)
+            strings.append(text)
+        return sidx[text]
+
+    out = io.BytesIO()
+    z = zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED)
+    sheets_xml, rels, ct_tables, tno = [], [], [], 0
+    tables_by_sheet = {}
+    for t in bp.get("tables", []):
+        tables_by_sheet.setdefault(t["sheet"], []).append(t)
+    for i, sh in enumerate(bp["sheets"]):
+        name = sh["name"]
+        grid = {}
+        for a, c in state["sheets"].get(name, {"cells": {}})["cells"].items():
+            p = parse_ref(a)
+            if p:
+                grid[p] = c
+        sheet_tables = []
+        for t in tables_by_sheet.get(name, []):
+            area = parse_area(t["ref"])
+            if not area:
+                continue
+            r1, c1 = area[0], area[1]
+            rows = state.get("tables", {}).get(t["name"], {"rows": []})["rows"]
+            hdr = r1 if t.get("header", True) else r1 - 1
+            for j, col in enumerate(t["columns"]):
+                grid[(hdr, c1 + j)] = {"v": col["name"], "bold": True}
+            for k, row in enumerate(rows):
+                r = hdr + 1 + k
+                for j, col in enumerate(t["columns"]):
+                    c = row["c"][j] if j < len(row["c"]) else None
+                    if col.get("calc") and not (c and (c.get("v") not in (None, "") or c.get("f"))):
+                        grid[(r, c1 + j)] = {"f": shift_formula(col["calc"], k, 0), "z": col.get("fmt"), "tb": t["name"]}
+                    elif c:
+                        grid[(r, c1 + j)] = dict(c, z=cell_fmt(c) or col.get("fmt"), tb=t["name"])
+            last = hdr + max(1, len(rows))
+            tot = None
+            if t.get("totals"):
+                tot = last + 1
+                for j, col in enumerate(t["columns"]):
+                    if col.get("totalsLabel"):
+                        grid[(tot, c1 + j)] = {"v": col["totalsLabel"], "bold": True}
+                    elif col.get("totalsFn"):
+                        code = {"sum": 109, "average": 101, "count": 103, "countNums": 102, "max": 104, "min": 105, "stdDev": 107, "var": 110}.get(col["totalsFn"], 109)
+                        ref_name = re.sub(r"([\[\]#'])", r"'\1", col["name"])
+                        grid[(tot, c1 + j)] = {"f": "SUBTOTAL(%d,%s[%s])" % (code, t["name"], ref_name), "z": col.get("fmt"), "bold": True}
+            sheet_tables.append((t, hdr, c1, last, tot))
+        rows_xml = []
+        for r in sorted(set(p[0] for p in grid)):
+            cells = []
+            for c in sorted(p[1] for p in grid if p[0] == r):
+                cell = grid[(r, c)]
+                ref = col_letters(c) + str(r)
+                s = xf(cell_fmt(cell), bool(cell.get("bold")))
+                sa = ' s="%d"' % s if s else ""
+                v = cell.get("v")
+                if cell.get("f"):
+                    cells.append('<c r="%s"%s><f>%s</f></c>' % (ref, sa, escape(file_formula(cell["f"], cell.get("tb")))))
+                elif isinstance(v, bool):
+                    cells.append('<c r="%s"%s t="b"><v>%d</v></c>' % (ref, sa, 1 if v else 0))
+                elif isinstance(v, (int, float)):
+                    cells.append('<c r="%s"%s><v>%r</v></c>' % (ref, sa, v))
+                elif v not in (None, ""):
+                    cells.append('<c r="%s"%s t="s"><v>%d</v></c>' % (ref, sa, sst(str(v))))
+                elif s:
+                    cells.append('<c r="%s"%s/>' % (ref, sa))
+            if cells:
+                rows_xml.append('<row r="%d">%s</row>' % (r, "".join(cells)))
+        srels, parts = [], []
+        for t, hdr, c1, last, tot in sheet_tables:
+            tno += 1
+            end = tot or last
+            ref = "%s%d:%s%d" % (col_letters(c1), hdr, col_letters(c1 + len(t["columns"]) - 1), end)
+            cols = []
+            for j, col in enumerate(t["columns"]):
+                a = ""
+                if col.get("totalsLabel"):
+                    a = ' totalsRowLabel="%s"' % escape(col["totalsLabel"], {'"': "&quot;"})
+                elif col.get("totalsFn"):
+                    a = ' totalsRowFunction="%s"' % col["totalsFn"]
+                calc = "<calculatedColumnFormula>%s</calculatedColumnFormula>" % escape(file_formula(col["calc"], t["name"])) if col.get("calc") and not re.search(r"(?<![A-Za-z\[])\$?[A-Z]{1,3}\$?\d", col["calc"]) else ""
+                cols.append('<tableColumn id="%d" name="%s"%s>%s</tableColumn>' % (j + 1, escape(col["name"], {'"': "&quot;"}), a, calc))
+            z.writestr("xl/tables/table%d.xml" % tno,
+                       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="%d" name="%s" displayName="%s" ref="%s"%s>'
+                       '<autoFilter ref="%s"/><tableColumns count="%d">%s</tableColumns><tableStyleInfo name="TableStyleMedium2" showFirstColumn="0" showLastColumn="0" showRowStripes="1" showColumnStripes="0"/></table>'
+                       % (tno, t["name"], t["name"], ref, ' totalsRowCount="1"' if tot else "", "%s%d:%s%d" % (col_letters(c1), hdr, col_letters(c1 + len(t["columns"]) - 1), last),
+                          len(cols), "".join(cols)))
+            ct_tables.append('<Override PartName="/xl/tables/table%d.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml"/>' % tno)
+            srels.append('<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table%d.xml"/>' % (len(srels) + 1, tno))
+            parts.append('<tablePart r:id="rId%d"/>' % len(srels))
+        widths = sh.get("colWidths") or {}
+        cols_xml = "".join('<col min="%d" max="%d" width="%s" customWidth="1"%s/>' % (col_index(k), col_index(k), w or 8.43, ' hidden="1"' if w == 0 else "")
+                           for k, w in sorted(widths.items(), key=lambda x: col_index(x[0])))
+        merges = "".join('<mergeCell ref="%s"/>' % m for m in sh.get("merges") or [])
+        z.writestr("xl/worksheets/sheet%d.xml" % (i + 1),
+                   '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                   + ("<cols>%s</cols>" % cols_xml if cols_xml else "") + "<sheetData>%s</sheetData>" % "".join(rows_xml)
+                   + ('<mergeCells count="%d">%s</mergeCells>' % (len(sh.get("merges") or []), merges) if merges else "")
+                   + ('<tableParts count="%d">%s</tableParts>' % (len(parts), "".join(parts)) if parts else "") + "</worksheet>")
+        if srels:
+            z.writestr("xl/worksheets/_rels/sheet%d.xml.rels" % (i + 1), '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + "".join(srels) + "</Relationships>")
+        sheets_xml.append('<sheet name="%s" sheetId="%d" r:id="rId%d"%s/>' % (escape(name, {'"': "&quot;"}), i + 1, i + 1, ' state="hidden"' if sh.get("state") == "hidden" else ""))
+        rels.append('<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet%d.xml"/>' % (i + 1, i + 1))
+    n = len(bp["sheets"])
+    rels.append('<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' % (n + 1))
+    rels.append('<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>' % (n + 2))
+    z.writestr("xl/sharedStrings.xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="%d" uniqueCount="%d">%s</sst>'
+               % (len(strings), len(strings), "".join('<si><t xml:space="preserve">%s</t></si>' % escape(x) for x in strings)))
+    names = "".join('<definedName name="%s">%s</definedName>' % (escape(x["name"]), escape(x["ref"])) for x in bp.get("names", []) if not x.get("scope"))
+    z.writestr("xl/workbook.xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+               '<sheets>%s</sheets>%s<calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>' % ("".join(sheets_xml), "<definedNames>%s</definedNames>" % names if names else ""))
+    z.writestr("xl/_rels/workbook.xml.rels", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + "".join(rels) + "</Relationships>")
+    numfmts = "".join('<numFmt numFmtId="%d" formatCode="%s"/>' % (fid, escape(code, {'"': "&quot;"})) for code, fid in fmts.items())
+    z.writestr("xl/styles.xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+               + ('<numFmts count="%d">%s</numFmts>' % (len(fmts), numfmts) if fmts else "")
+               + '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'
+               '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+               '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="%d">%s</cellXfs>'
+               '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'
+               % (len(xfs), "".join('<xf numFmtId="%d" fontId="%d" fillId="0" borderId="0" xfId="0"%s%s/>' % (f, 1 if b else 0, ' applyNumberFormat="1"' if f else "", ' applyFont="1"' if b else "") for f, b in xfs)))
+    z.writestr("_rels/.rels", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+               '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>')
+    z.writestr("[Content_Types].xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+               '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>'
+               '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+               '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+               '<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>'
+               + "".join('<Override PartName="/xl/worksheets/sheet%d.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' % (k + 1) for k in range(n))
+               + "".join(ct_tables) + "</Types>")
+    z.close()
+    return out.getvalue()
+
+
+# --------------------------------------------------------------------------------------------- the web server
+def lan_addresses():
+    found = []
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("10.255.255.255", 1))  # no packet is sent; this just picks the network card
+        found.append(s.getsockname()[0])
+        s.close()
+    except OSError:
+        pass
+    try:
+        for ip in socket.gethostbyname_ex(socket.gethostname())[2]:
+            if ip not in found:
+                found.append(ip)
+    except OSError:
+        pass
+    return [ip for ip in found if not ip.startswith("127.") and not ip.startswith("169.254.")]
+
+
+def icon_svg(title, color):
+    words = re.findall(r"[A-Za-z0-9]", title or "A")
+    parts = (title or "App").split()
+    ini = ((parts[0][:1] + (parts[-1][:1] if len(parts) > 1 else "")) if parts else "A").upper()
+    return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%s"/>'
+            '<text x="32" y="41" font-family="system-ui,Segoe UI,Arial" font-size="26" font-weight="700" text-anchor="middle" fill="#fff">%s</text></svg>'
+            % (color, escape(ini or (words[0] if words else "A"))))
+
+
+class App(object):
+    html = b""
+    data = {}
+    store = None
+    pin = ""
+
+
+def auth_token():
+    return hmac.new(SECRET.encode(), (App.pin or "").encode(), hashlib.sha256).hexdigest()
+
+
+class Handler(BaseHTTPRequestHandler):
+    server_version = "Sheetsmith/1"
+
+    def log_message(self, fmt, *args):
+        pass
+
+    def send(self, code, body, ctype="application/json", extra=None):
+        data = body if isinstance(body, bytes) else (json.dumps(body, separators=(",", ":")) if not isinstance(body, str) else body).encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", ctype + ("; charset=utf-8" if ctype.startswith(("text/", "application/json", "image/svg")) else ""))
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        for k, v in (extra or {}).items():
+            self.send_header(k, v)
+        self.end_headers()
+        self.wfile.write(data)
+
+    def who(self):
+        from urllib.parse import unquote
+        name = unquote(self.headers.get("X-Who") or "").strip()[:40]
+        return re.sub(r"[\x00-\x1f]", "", name) or "Someone"
+
+    def seen(self):
+        key = self.client_address[0] + "|" + (self.headers.get("User-Agent") or "")[:60]
+        now = time.time()
+        CLIENTS[key] = now
+        for k in [k for k, t in CLIENTS.items() if now - t > 20]:
+            CLIENTS.pop(k, None)
+        return len(CLIENTS)
+
+    def authed(self):
+        if not App.pin:
+            return True
+        cookie = self.headers.get("Cookie") or ""
+        m = re.search(r"(?:^|;\s*)ss_auth=([0-9a-f]+)", cookie)
+        return bool(m) and hmac.compare_digest(m.group(1), auth_token())
+
+    def body(self):
+        n = int(self.headers.get("Content-Length") or 0)
+        if n > 20 * 1024 * 1024:
+            raise ValueError("too big")
+        return json.loads(self.rfile.read(n) or b"{}")
+
+    def do_GET(self):
+        u = urlparse(self.path)
+        path = u.path.rstrip("/") or "/"
+        q = {k: v[0] for k, v in parse_qs(u.query).items()}
+        app = App.data.get("app", {})
+        if path in ("/", "/index.html"):
+            return self.send(200, App.html, "text/html")
+        if path == "/manifest.json":
+            return self.send(200, {"name": app.get("title", "App"), "short_name": app.get("title", "App")[:12], "start_url": ".", "display": "standalone",
+                                   "background_color": "#f4f5f2", "theme_color": app.get("color", "#1d7a4f"),
+                                   "icons": [{"src": "icon.svg", "sizes": "any", "type": "image/svg+xml"}]}, "application/manifest+json")
+        if path == "/icon.svg":
+            return self.send(200, icon_svg(app.get("title"), app.get("color", "#1d7a4f")), "image/svg+xml")
+        if path == "/favicon.ico":
+            return self.send(204, b"", "image/x-icon")
+        if not path.startswith("/api/"):
+            return self.send(404, {"error": "not found"})
+        if not self.authed():
+            return self.send(401, {"error": "pin"})
+        with LOCK:
+            st = App.store
+            if path == "/api/state":
+                clients = self.seen()
+                if q.get("since") and q["since"] == str(st.rev):
+                    return self.send(200, {"rev": st.rev, "clients": clients})
+                return self.send(200, {"rev": st.rev, "state": st.state, "clients": clients})
+            if path == "/api/log":
+                try:
+                    limit = max(1, min(500, int(q.get("limit") or 100)))
+                except ValueError:
+                    limit = 100
+                return self.send(200, {"items": st.log(limit)})
+            if path == "/api/info":
+                port = self.server.server_address[1]
+                return self.send(200, {"title": app.get("title"), "rev": st.rev, "clients": len(CLIENTS), "started": STARTED.isoformat(timespec="seconds"),
+                                       "urls": ["http://%s:%d/" % (ip, port) for ip in lan_addresses()]})
+            if path == "/api/export.xlsx":
+                data = export_xlsx(st.state, App.data["bp"])
+                name = re.sub(r"[^A-Za-z0-9 _-]+", "", app.get("title") or "export").strip() or "export"
+                return self.send(200, data, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                 {"Content-Disposition": 'attachment; filename="%s %s.xlsx"' % (name, dt.date.today().isoformat())})
+            if path == "/api/backup.json":
+                return self.send(200, st.state, "application/json", {"Content-Disposition": 'attachment; filename="backup-%s.json"' % dt.date.today().isoformat()})
+        return self.send(404, {"error": "not found"})
+
+    def do_POST(self):
+        path = urlparse(self.path).path.rstrip("/")
+        try:
+            body = self.body()
+        except ValueError:
+            return self.send(400, {"error": "bad request"})
+        if path == "/api/login":
+            if App.pin and hmac.compare_digest(str(body.get("pin") or ""), App.pin):
+                return self.send(200, {"ok": True}, extra={"Set-Cookie": "ss_auth=%s; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000" % auth_token()})
+            time.sleep(0.6)
+            return self.send(403, {"ok": False})
+        if not self.authed():
+            return self.send(401, {"error": "pin"})
+        if path == "/api/ops":
+            ops = body.get("ops")
+            if not isinstance(ops, list):
+                return self.send(400, {"error": "ops must be a list"})
+            with LOCK:
+                st = App.store
+                before = st.rev
+                st.apply(ops, self.who(), App.data["bp"])
+                out = {"rev": st.rev}
+                if body.get("base") != before:  # someone else changed things since this device last looked
+                    out["state"] = st.state
+                return self.send(200, out)
+        return self.send(404, {"error": "not found"})
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Share this Sheetsmith app on your network.")
+    ap.add_argument("--port", type=int, default=int(CONFIG.get("port") or 8080))
+    ap.add_argument("--host", default="0.0.0.0", help="0.0.0.0 = every network on this computer; 127.0.0.1 = this computer only")
+    ap.add_argument("--pin", default=None, help="ask for this PIN before opening the app")
+    ap.add_argument("--reset", action="store_true", help="throw away the data and start again from the workbook's data")
+    ap.add_argument("--no-browser", action="store_true")
+    args = ap.parse_args()
+    App.html, App.data = read_app()
+    App.pin = args.pin if args.pin is not None else str(CONFIG.get("pin") or "")
+    title = App.data.get("app", {}).get("title") or CONFIG.get("title") or "Sheetsmith app"
+    if args.reset:
+        print("Starting over with the workbook's data (a backup of the old data is in data/backups).")
+    App.store = Store(App.data["seed"], reset=args.reset)
+    srv = None
+    ThreadingHTTPServer.allow_reuse_address = False
+    ThreadingHTTPServer.daemon_threads = True
+    for port in range(args.port, args.port + 15):
+        try:
+            srv = ThreadingHTTPServer((args.host, port), Handler)
+            break
+        except OSError:
+            continue
+    if not srv:
+        sys.exit("Ports %d-%d are all busy. Try: python server.py --port 9100" % (args.port, args.port + 14))
+    port = srv.server_address[1]
+    print("")
+    print("  %s is running." % title)
+    print("    On this computer:   http://localhost:%d/" % port)
+    ips = lan_addresses() if args.host != "127.0.0.1" else []
+    for ip in ips:
+        print("    On your network:    http://%s:%d/   <- open this on phones and other computers" % (ip, port))
+    if not ips and args.host != "127.0.0.1":
+        print("    (No network found. Connect to Wi-Fi to share it with other devices.)")
+    if App.pin:
+        print("    PIN: %s" % App.pin)
+    print("  Data is saved in %s. Press Ctrl+C to stop." % os.path.relpath(DB_PATH))
+    print("")
+    if not args.no_browser:
+        threading.Timer(0.8, lambda: webbrowser.open("http://localhost:%d/" % port)).start()
+    try:
+        srv.serve_forever()
+    except KeyboardInterrupt:
+        print("\nStopped. Your data is safe in %s." % os.path.relpath(DB_PATH))
+
+
+if __name__ == "__main__":
+    main()

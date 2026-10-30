@@ -1,0 +1,31 @@
+/* theme.css: Anvil puts this file in the page itself, so it applies before the app has loaded.
+   It styles Anvil's loading spinner (shown while the app starts and during server calls) as the app icon
+   (url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E %3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22%231d7a4f%22/%3E %3Crect x=%2212%22 y=%2212%22 width=%2218%22 height=%2218%22 rx=%224%22 fill=%22%23ffffff%22/%3E %3Crect x=%2234%22 y=%2212%22 width=%2218%22 height=%2218%22 rx=%224%22 fill=%22%23ffffff%22 fill-opacity=%220.55%22/%3E %3Crect x=%2212%22 y=%2234%22 width=%2218%22 height=%2218%22 rx=%224%22 fill=%22%23ffffff%22 fill-opacity=%220.55%22/%3E %3Ccircle cx=%2243%22 cy=%2243%22 r=%2210%22 fill=%22%23f0a23a%22/%3E %3Cpath d=%22M39 43.2l2.9 2.8 5.2-5.6%22 fill=%22none%22 stroke=%22%2314211b%22 stroke-width=%222.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E %3C/svg%3E") is replaced by assets/icon.svg when syncing). Keep the colours in step with web/core.css.
+   Anvil substitutes its theme-colour tokens (percent sign, "color:", a name, percent sign) in this file,
+   so never write that pattern here. */
+html, body { background: #f3f5f0; }
+@media (prefers-color-scheme: dark) { html:not([data-theme="light"]), html:not([data-theme="light"]) body { background: #0c1511; } }
+html[data-theme="dark"], html[data-theme="dark"] body { background: #0c1511; }
+
+html .anvil-spinner, #loadingSpinner {
+  --anvil-spinner-size: 88px;
+  width: 88px !important; height: 88px !important; top: calc(50% - 44px); left: calc(50% - 44px);
+  border-radius: 22px !important; background: #ffffff !important; background-image: none !important; color: transparent;
+  box-shadow: 0 10px 34px rgba(20, 33, 27, .16), 0 0 0 1px rgba(20, 33, 27, .06) !important;
+  animation: app-breathe 1.4s ease-in-out infinite;
+}
+html .anvil-spinner .anvil-spinner-svg, #loadingSpinner > svg, #loadingSpinner > img { display: none !important; }
+html .anvil-spinner::after, #loadingSpinner::after {
+  content: ""; position: absolute; inset: 14px; border-radius: 16px;
+  background: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E %3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22%231d7a4f%22/%3E %3Crect x=%2212%22 y=%2212%22 width=%2218%22 height=%2218%22 rx=%224%22 fill=%22%23ffffff%22/%3E %3Crect x=%2234%22 y=%2212%22 width=%2218%22 height=%2218%22 rx=%224%22 fill=%22%23ffffff%22 fill-opacity=%220.55%22/%3E %3Crect x=%2212%22 y=%2234%22 width=%2218%22 height=%2218%22 rx=%224%22 fill=%22%23ffffff%22 fill-opacity=%220.55%22/%3E %3Ccircle cx=%2243%22 cy=%2243%22 r=%2210%22 fill=%22%23f0a23a%22/%3E %3Cpath d=%22M39 43.2l2.9 2.8 5.2-5.6%22 fill=%22none%22 stroke=%22%2314211b%22 stroke-width=%222.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E %3C/svg%3E") center / contain no-repeat;
+}
+html .anvil-spinner::before, #loadingSpinner::before {
+  content: ""; position: absolute; inset: -7px; border-radius: 28px; border: 3px solid transparent;
+  border-top-color: #1d7a4f; border-right-color: #f0a23a; animation: app-turn 1s linear infinite;
+}
+@keyframes app-turn { to { transform: rotate(360deg); } }
+@keyframes app-breathe { 50% { transform: scale(.94); } }
+@media (prefers-reduced-motion: reduce) {
+  html .anvil-spinner, #loadingSpinner { animation: none; }
+  html .anvil-spinner::before, #loadingSpinner::before { animation-duration: 3s; }
+}

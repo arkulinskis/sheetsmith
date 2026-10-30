@@ -1,0 +1,275 @@
+allow_embedding: false
+db_schema:
+  app_settings:
+    client: none
+    columns:
+    - admin_ui:
+        order: 0
+        width: 200
+      name: key
+      type: string
+    - admin_ui:
+        order: 1
+        width: 200
+      name: value
+      type: simpleObject
+    indexes: []
+    server: full
+    title: App settings
+  feedback:
+    client: none
+    columns:
+    - admin_ui:
+        order: 0
+        width: 200
+      name: user
+      target: users
+      type: link_single
+    - admin_ui:
+        order: 1
+        width: 200
+      name: name
+      type: string
+    - admin_ui:
+        order: 2
+        width: 200
+      name: email
+      type: string
+    - admin_ui:
+        order: 3
+        width: 200
+      name: kind
+      type: string
+    - admin_ui:
+        order: 4
+        width: 200
+      name: message
+      type: string
+    - admin_ui:
+        order: 5
+        width: 200
+      name: context
+      type: simpleObject
+    - admin_ui:
+        order: 6
+        width: 200
+      name: status
+      type: string
+    - admin_ui:
+        order: 7
+        width: 200
+      name: note
+      type: string
+    - admin_ui:
+        order: 8
+        width: 200
+      name: created
+      type: datetime
+    indexes: []
+    server: full
+    title: Feedback
+  projects:
+    client: none
+    columns:
+    - admin_ui:
+        order: 0
+        width: 200
+      name: owner
+      target: users
+      type: link_single
+    - admin_ui:
+        order: 1
+        width: 200
+      name: name
+      type: string
+    - admin_ui:
+        order: 2
+        width: 200
+      name: file_name
+      type: string
+    - admin_ui:
+        order: 3
+        width: 200
+      name: file
+      type: media
+    - admin_ui:
+        order: 4
+        width: 200
+      name: blueprint
+      type: media
+    - admin_ui:
+        order: 5
+        width: 200
+      name: summary
+      type: simpleObject
+    - admin_ui:
+        order: 6
+        width: 200
+      name: settings
+      type: simpleObject
+    - admin_ui:
+        order: 7
+        width: 200
+      name: created
+      type: datetime
+    - admin_ui:
+        order: 8
+        width: 200
+      name: updated
+      type: datetime
+    - admin_ui:
+        order: 9
+        width: 200
+      name: downloads
+      type: number
+    - admin_ui:
+        order: 10
+        width: 200
+      name: last_download
+      type: datetime
+    - admin_ui:
+        order: 11
+        width: 200
+      name: is_demo
+      type: bool
+    - admin_ui:
+        order: 12
+        width: 200
+      name: example
+      type: string
+    indexes: []
+    server: full
+    title: Projects
+  users:
+    client: none
+    columns:
+    - admin_ui:
+        order: 0
+        width: 200
+      client_hidden: false
+      name: email
+      type: string
+    - admin_ui:
+        order: 1
+        width: 200
+      client_hidden: true
+      name: enabled
+      type: bool
+    - admin_ui:
+        order: 2
+        width: 200
+      client_hidden: true
+      name: last_login
+      type: datetime
+    - admin_ui:
+        order: 3
+        width: 200
+      client_hidden: true
+      name: password_hash
+      type: string
+    - admin_ui:
+        order: 4
+        width: 200
+      client_hidden: true
+      name: n_password_failures
+      type: number
+    - admin_ui:
+        order: 5
+        width: 200
+      client_hidden: true
+      name: confirmed_email
+      type: bool
+    - admin_ui:
+        order: 6
+        width: 200
+      client_hidden: true
+      name: signed_up
+      type: datetime
+    - admin_ui:
+        order: 7
+        width: 200
+      client_hidden: false
+      name: display_name
+      type: string
+    - admin_ui:
+        order: 8
+        width: 200
+      client_hidden: false
+      name: is_admin
+      type: bool
+    - admin_ui:
+        order: 9
+        width: 200
+      client_hidden: false
+      name: is_demo
+      type: bool
+    - admin_ui:
+        order: 10
+        width: 200
+      client_hidden: false
+      name: last_seen
+      type: datetime
+    - admin_ui:
+        order: 11
+        width: 200
+      client_hidden: false
+      name: legal_version
+      type: string
+    - admin_ui:
+        order: 12
+        width: 200
+      client_hidden: false
+      name: legal_accepted_at
+      type: datetime
+    - admin_ui:
+        order: 13
+        width: 200
+      client_hidden: false
+      name: legal_source
+      type: string
+    indexes: []
+    server: full
+    title: Users
+metadata:
+  description: Upload an Excel workbook with its tables, rules and VBA macros and get a web app with a small Python server
+    that runs on any local network.
+  logo_img: asset:icon-512.png
+  title: 'Sheetsmith: turn an Excel workbook into a web app'
+name: Sheetsmith
+native_deps:
+  head_html: "<script src=\"_/theme/legal-kit.js?v=ccc54867db\"></script>\n<meta name=\"viewport\" content=\"width=device-width,\
+    \ initial-scale=1, viewport-fit=cover\">\n<meta name=\"theme-color\" content=\"#1d7a4f\">\n<meta name=\"apple-mobile-web-app-capable\"\
+    \ content=\"yes\">\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"\
+    https://fonts.gstatic.com\" crossorigin>\n<link href=\"https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap\"\
+    \ rel=\"stylesheet\">\n<link id=\"ui-favicon\" rel=\"icon\" type=\"image/svg+xml\" href=\"_/theme/icon.svg?v=6daccb156f\"\
+    >\n<link rel=\"apple-touch-icon\" href=\"_/theme/icon-180.png?v=6daccb156f\">\n<script>\n/* Keep our tab icon: Anvil adds\
+    \ its own <link rel=\"icon\">, so drop any other icon link. */\n(function () {\n  function keep() {\n    var ours = document.getElementById('ui-favicon');\n\
+    \    if (!ours) return;\n    document.querySelectorAll('link[rel~=\"icon\"]').forEach(function (l) { if (l !== ours) l.remove();\
+    \ });\n  }\n  keep();\n  document.addEventListener('DOMContentLoaded', keep);\n  window.addEventListener('load', keep);\n\
+    })();\n</script>\n<link rel=\"stylesheet\" href=\"_/theme/app.css?v=fed4f1bf01\">\n<script src=\"_/theme/app.js?v=4a6188f4ff\"\
+    ></script>\n"
+package_name: Sheetsmith
+runtime_options:
+  client_version: '3'
+  server_spec:
+    base: python314
+  version: 3
+services:
+- client_config:
+    enable_v2: true
+  server_config: {}
+  source: /runtime/services/tables.yml
+- client_config:
+    allow_remember_me: true
+    allow_signup: true
+    confirm_email: false
+    enable_automatically: true
+    remember_me_days: 30
+    require_secure_passwords: true
+    use_email: true
+  server_config:
+    user_table: users
+  source: /runtime/services/anvil/users.yml
+startup:
+  module: Main
+  type: form

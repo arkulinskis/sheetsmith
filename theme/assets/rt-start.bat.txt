@@ -1,0 +1,21 @@
+@echo off
+title {{TITLE}}
+cd /d "%~dp0"
+where py >nul 2>nul
+if %errorlevel%==0 (
+  py -3 server.py %*
+  goto done
+)
+where python >nul 2>nul
+if %errorlevel%==0 (
+  python server.py %*
+  goto done
+)
+echo.
+echo   Python isn't installed on this computer yet.
+echo   Get it from https://www.python.org/downloads/ and tick "Add python.exe to PATH",
+echo   then double-click this file again.
+echo.
+start "" https://www.python.org/downloads/
+:done
+pause
