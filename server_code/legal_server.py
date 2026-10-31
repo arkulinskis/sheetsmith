@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 import anvil.server
 import anvil.users
 
-VERSION = "2026-10-26"
+VERSION = "2026-10-31"
 
 
 def _get(row, col):
