@@ -6,7 +6,7 @@ upload a workbook, adjust the app in a studio, preview it live, and download a z
 scripts, README). Everyone on the same Wi-Fi then shares the app and its data. Built on [Anvil](https://anvil.works).
 
 - **App repo:** github.com/arkulinskis/sheetsmith (branch `master`). Anvil pulls `master`.
-- **Live:** not published yet (planned: sheetsmith.anvil.app).
+- **Live:** https://sheetsmith.anvil.app
 
 ## What it does
 
