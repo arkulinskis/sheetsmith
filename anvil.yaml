@@ -237,7 +237,7 @@ metadata:
   title: 'Sheetsmith: turn an Excel workbook into a web app'
 name: Sheetsmith
 native_deps:
-  head_html: "<script src=\"_/theme/legal-kit.js?v=0d20f241df\"></script>\n<!-- seo:start (APP_MAKER/seo: edit seo/apps/sheetsmith.json\
+  head_html: "<script src=\"_/theme/legal-kit.js?v=220af0043c\"></script>\n<!-- seo:start (APP_MAKER/seo: edit seo/apps/sheetsmith.json\
     \ and run seo.py, not here) -->\n<link rel=\"canonical\" href=\"https://sheetsmith.anvil.app/\">\n<meta name=\"robots\"\
     \ content=\"index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1\">\n<meta name=\"keywords\" content=\"\
     excel to web app, convert excel to app, spreadsheet to web app, vba macros to web, xlsm converter, excel database for\
