@@ -357,29 +357,16 @@
     route();
   };
 
-  /* ------------------------------------------------------------------ feedback form (footer + menu) */
-  UI.feedback = function (kind) {
-    var kinds = [['bug', 'Something\'s broken', 'bug'], ['idea', 'An idea', 'bulb'], ['question', 'A question', 'info'], ['other', 'Something else', 'chat']];
-    var m = UI.modal('<h2>Send feedback</h2><p class="muted">Found a bug or have an idea? It goes straight to the people who make ' + UI.esc(UI.config.name) + '.</p>' +
-      '<form class="ui-stack" data-fb>' +
-      '<div class="ui-choices">' + kinds.map(function (k) {
-        return '<label class="ui-choice"><input type="radio" name="kind" value="' + k[0] + '"' + ((kind || 'bug') === k[0] ? ' checked' : '') + '>' +
-          '<span>' + UI.icon(k[2]) + UI.esc(k[1]) + '</span></label>';
-      }).join('') + '</div>' +
-      '<label class="ui-field"><span>What happened, or what would you like?</span><textarea name="message" rows="5" required minlength="5" placeholder="The more detail, the better."></textarea></label>' +
-      (UI.me ? '' : '<label class="ui-field"><span>Your email <em>(optional, if you\'d like a reply)</em></span><input type="email" name="email" autocomplete="email"></label>') +
-      '<p class="ui-hint">We also send the page you were on, your screen size and browser, to help us fix bugs.</p>' +
-      '<div class="ui-row end"><button type="button" class="ui-btn ghost" data-close>Cancel</button><button class="ui-btn primary" type="submit">' + UI.icon('arrow') + 'Send</button></div></form>');
-    var form = m.el.querySelector('[data-fb]');
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var v = UI.formData(form);
-      var ctx = { page: location.hash || '#', screen: innerWidth + 'x' + innerHeight, browser: navigator.userAgent.slice(0, 280), theme: UI.theme() };
-      UI.busy(form.querySelector('[type=submit]'), UI.api('submit_feedback', v.kind, v.message, v.email || null, ctx)).then(function () {
-        m.close(); UI.toast('Thank you! Your message was sent.', 'ok');
-      });
-    });
-    return m;
+  /* ------------------------------------------------------------------ feedback (footer + menu)
+     All feedback goes to Prepsto. The widget tag in head.html (data-prepsto="CODE") slides its panel in;
+     any [data-feedback] or [data-prepsto-open] element opens it. If the widget hasn't loaded, the panel opens in a new tab.
+     There is no in-app feedback form any more: Admin -> Feedback only lists older messages (and app requests). */
+  UI.feedback = function () {
+    if (window.Prepsto && window.Prepsto.open) { window.Prepsto.open(); return; }
+    var tag = document.querySelector('script[data-prepsto]');
+    var code = tag && tag.getAttribute('data-prepsto');
+    if (code && code.indexOf('__') !== 0) window.open('https://prepsto.com/#f/' + encodeURIComponent(code), '_blank', 'noopener');
+    else UI.toast('Feedback is not set up yet.', 'error');
   };
 
   /* Shared clicks: [data-go="page/arg"], [data-feedback], [data-theme-set] anywhere in the app. */
@@ -450,7 +437,7 @@
       '<a href="#profile" data-go="profile">' + UI.icon('user') + 'Your profile</a>' +
       (me.is_admin ? '<a href="#admin" data-go="admin">' + UI.icon('shield') + 'Admin</a>' : '') +
       '<div class="ui-menu-block"><span class="small muted">Appearance</span>' + themeSwitch() + '</div>' +
-      '<button type="button" data-feedback>' + UI.icon('chat') + 'Send feedback</button>' +
+      '<button type="button" data-feedback>' + UI.icon('chat') + 'Submit feedback</button>' +
       '<button type="button" data-lk-open="overview">' + UI.icon('lock') + 'Privacy &amp; Terms</button>' +
       '<button type="button" data-signout>' + UI.icon('logout') + 'Sign out</button></div>';
   }
@@ -471,8 +458,7 @@
       return '<div class="ui-footer-in"><div class="ui-footer-brand">' + brand() + '<p class="muted small">' + esc(UI.config.tagline) + '</p></div>' +
         '<div class="ui-footer-links">' +
         '<a href="#landing" data-go="landing">About</a>' +
-        '<a href="https://prepsto.com/#f/atfsscf" target="_blank" rel="noopener" data-prepsto-open>Suggest an idea</a>' +
-        '<button type="button" data-feedback>Send feedback</button>' +
+        '<a href="https://prepsto.com/#f/atfsscf" target="_blank" rel="noopener" data-prepsto-open>Submit feedback</a>' +
         '<button type="button" data-lk-open="overview">Privacy &amp; Terms</button>' +
         '</div><p class="ui-footer-legal small muted">© ' + new Date().getFullYear() + ' ' + esc(UI.config.name) + '</p></div>';
     },
@@ -4807,7 +4793,7 @@
                 return '<button class="ui-btn sm' + (i.status === s ? ' primary' : '') + '" data-status="' + s + '">' + s[0].toUpperCase() + s.slice(1) + '</button>';
               }).join('') + '<span class="ui-spacer"></span><button class="ui-btn sm danger" data-del-fb>' + UI.icon('trash') + 'Delete</button></div></div>';
           }).join('') + '</div>'
-            : '<div class="ui-empty">' + UI.icon('inbox') + '<h3>No ' + (fbFilter === 'all' ? '' : fbFilter + ' ') + 'messages</h3><p>Messages from the "Send feedback" form show up here.</p></div>');
+            : '<div class="ui-empty">' + UI.icon('inbox') + '<h3>No ' + (fbFilter === 'all' ? '' : fbFilter + ' ') + 'messages</h3><p>New feedback goes to Prepsto (prepsto.com). Older messages and requests from the app show up here.</p></div>');
       });
     }
 
@@ -5156,7 +5142,7 @@
       '<button class="ui-btn" data-reset>' + UI.icon('mail') + 'Email me a reset link</button></div></div>' +
       '<div class="ui-card" style="margin-top:16px"><div class="pf-links">' +
       (me.is_admin ? '<a href="#admin" data-go="admin">' + UI.icon('shield') + 'Admin</a>' : '') +
-      '<button data-feedback>' + UI.icon('chat') + 'Send feedback</button>' +
+      '<button data-feedback>' + UI.icon('chat') + 'Submit feedback</button>' +
       '<button data-lk-open="overview">' + UI.icon('lock') + 'Privacy &amp; Terms, and your data</button>' +
       '<button data-signout-here>' + UI.icon('logout') + 'Sign out</button></div></div></div>';
     function themeBox() {

@@ -237,7 +237,7 @@ metadata:
   title: 'Sheetsmith: turn an Excel workbook into a web app'
 name: Sheetsmith
 native_deps:
-  head_html: "<script src=\"_/theme/legal-kit.js?v=38a9daabdf\"></script>\n<meta name=\"viewport\" content=\"width=device-width,\
+  head_html: "<script src=\"_/theme/legal-kit.js?v=0d20f241df\"></script>\n<meta name=\"viewport\" content=\"width=device-width,\
     \ initial-scale=1, viewport-fit=cover\">\n<meta name=\"theme-color\" content=\"#1d7a4f\">\n<meta name=\"apple-mobile-web-app-capable\"\
     \ content=\"yes\">\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"\
     https://fonts.gstatic.com\" crossorigin>\n<link href=\"https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap\"\
@@ -246,10 +246,10 @@ native_deps:
     \ its own <link rel=\"icon\">, so drop any other icon link. */\n(function () {\n  function keep() {\n    var ours = document.getElementById('ui-favicon');\n\
     \    if (!ours) return;\n    document.querySelectorAll('link[rel~=\"icon\"]').forEach(function (l) { if (l !== ours) l.remove();\
     \ });\n  }\n  keep();\n  document.addEventListener('DOMContentLoaded', keep);\n  window.addEventListener('load', keep);\n\
-    })();\n</script>\n\n<!-- Prepsto feedback panel: the footer's \"Suggest an idea\" link (data-prepsto-open) slides it in.\
-    \ No floating button, no cookies, nothing loads until it is opened. Codes: APP_MAKER/prepsto-links.json -->\n<script src=\"\
-    https://prepsto.com/_/theme/widget.js\" data-prepsto=\"atfsscf\" data-button=\"false\" data-label=\"Suggest an idea\"\
-    \ async></script>\n<link rel=\"stylesheet\" href=\"_/theme/app.css?v=fed4f1bf01\">\n<script src=\"_/theme/app.js?v=a7b91afc3d\"\
+    })();\n</script>\n\n<!-- Prepsto feedback panel: every \"Submit feedback\" link and button opens it (it is the only feedback\
+    \ channel). No floating button, no cookies, nothing loads until it is opened. Codes: APP_MAKER/prepsto-links.json -->\n\
+    <script src=\"https://prepsto.com/_/theme/widget.js\" data-prepsto=\"atfsscf\" data-button=\"false\" data-label=\"Submit\
+    \ feedback\" async></script>\n<link rel=\"stylesheet\" href=\"_/theme/app.css?v=fed4f1bf01\">\n<script src=\"_/theme/app.js?v=d5435a6b3a\"\
     ></script>\n"
 package_name: Sheetsmith
 runtime_options:
