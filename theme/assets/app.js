@@ -5070,36 +5070,43 @@
           ['Is it secure?', 'The app is meant for networks you trust (home, office, shop). Anyone on the network can open it unless you set a PIN. It never sends your data anywhere.']]
   };
 
+  // The slider stage: both sides show the same orders, so the comparison is honest
   function heroArt() {
-    return '<div class="lp-art" aria-hidden="true">' +
-      '<div class="lp-sheet"><div class="bar"><i></i><i></i><i></i><span class="fx">=[@Qty]*[@[Unit price]]</span></div><div class="lp-grid">' +
-        '<span class="h"></span><span class="h">A</span><span class="h">B</span><span class="h">C</span><span class="h x">D</span>' +
-        '<span class="h">1</span><span class="th">Customer</span><span class="th">Qty</span><span class="th">Total</span><span class="th x">Status</span>' +
-        '<span class="h">2</span><span>Café Lumen</span><span class="num">24</span><span class="num sel">$114.00</span><span class="x late">Baking</span>' +
-        '<span class="h">3</span><span>Priya N.</span><span class="num">6</span><span class="num">$39.00</span><span class="x ok">Ready</span>' +
-        '<span class="h">4</span><span>Studio Nine</span><span class="num">4</span><span class="num">$48.00</span><span class="x ok">Ready</span>' +
-        '<span class="h">5</span><span>Olivier G.</span><span class="num">2</span><span class="num">$17.50</span><span class="x">New</span>' +
-        '<span class="h">6</span><span></span><span></span><span></span><span class="x"></span></div></div>' +
-      '<div class="lp-vba"><span class="k">Sub</span> MarkBakingReady()<br>&nbsp; <span class="k">For</span> i = 1 <span class="k">To</span> tbl.ListRows.Count<br>&nbsp;&nbsp;&nbsp; ...<br>&nbsp; MsgBox n &amp; <span class="s">" ready!"</span><br><span class="k">End Sub</span></div>' +
-      '<div class="lp-arrow">' + UI.icon('arrow') + '</div>' +
-      '<div class="lp-phone"><div class="lp-screen"><div class="appbar"><b>JB</b>Orders</div><div class="chips"><span>All 13</span><span>Ready 2</span><span>Baking 3</span></div>' +
-        '<div class="lp-row r1"><b>Priya Natarajan <i>Ready</i></b><small>Lemon tart · 6 · $39.00</small></div>' +
-        '<div class="lp-row r2"><b>Café Lumen <i>Late</i></b><small>Almond croissant · 24</small></div>' +
-        '<div class="lp-row r3"><b>Daniel Roy <i>Baking</i></b><small>Birthday cake · 1</small></div>' +
-        '<div class="btn">⚡ Mark baking ready</div><div class="tabs"><span>Orders</span><span>Menu</span><span>Summary</span><span>More</span></div></div></div>' +
-      '<div class="lp-wifi">' + UI.icon('wifi') + 'http://192.168.1.20:8080</div></div>';
+    var rows = [['Café Lumen', 'Almond croissant', 24, '4.75', '114.00', 'Baking', 'bk', 'Fri'], ['Priya N.', 'Lemon tart', 6, '6.50', '39.00', 'Ready', 'ok', 'Today'],
+                ['Studio Nine', 'Sourdough', 4, '12.00', '48.00', 'Ready', 'ok', 'Today'], ['Daniel Roy', 'Birthday cake', 1, '55.00', '55.00', 'Late', 'late', 'Thu'],
+                ['Olivier G.', 'Baguette', 2, '8.75', '17.50', 'New', '', 'Sat']];
+    var g = '<span class="h"></span>' + ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(function (c, i) { return '<span class="h' + ([1, 3, 6].indexOf(i) >= 0 ? ' x' : '') + '">' + c + '</span>'; }).join('') +
+      '<span class="h">1</span><span class="th">Customer</span><span class="th x">Item</span><span class="th">Qty</span><span class="th x">Unit price</span><span class="th">Total</span><span class="th">Status</span><span class="th x">Due</span>';
+    rows.forEach(function (r, i) {
+      g += '<span class="h">' + (i + 2) + '</span><span>' + r[0] + '</span><span class="x">' + r[1] + '</span><span class="num">' + r[2] + '</span><span class="num x">$' + r[3] + '</span>' +
+        '<span class="num' + (i === 0 ? ' sel' : '') + '">$' + r[4] + '</span><span class="' + r[6] + '">' + r[5] + '</span><span class="x">' + r[7] + '</span>';
+    });
+    for (var i = 7; i < 10; i++) g += '<span class="h">' + i + '</span><span></span><span class="x"></span><span></span><span class="x"></span><span></span><span></span><span class="x"></span>';
+    var cards = [['c1', 'Priya Natarajan', 'Ready', 'Lemon tart · 6 · $39.00'], ['c2', 'Daniel Roy', 'Late', 'Birthday cake · 1 · $55.00'],
+                 ['c3', 'Café Lumen', 'Baking', 'Almond croissant · 24'], ['', 'Studio Nine', 'Ready', 'Sourdough · 4 · $48.00']];
+    return '<div class="lp-ba" data-ba>' +
+      '<div class="side lp-xl" aria-hidden="true"><div class="bar">Jolie Boulangerie orders.xlsm</div><div class="fx"><b>E2</b>=[@Qty]*[@[Unit price]]</div><div class="grid">' + g + '</div>' +
+        '<div class="vba"><span class="k">Sub</span> MarkBakingReady()<br>&nbsp; <span class="k">For</span> i = 1 <span class="k">To</span> tbl.ListRows.Count<br>&nbsp;&nbsp;&nbsp; ...<br><span class="k">End Sub</span></div>' +
+        '<div class="tabs"><span>Orders</span><span>Menu</span><span>Summary</span></div></div>' +
+      '<div class="side lp-app" aria-hidden="true"><div class="top"><b>JB</b>Orders<span class="wifi">' + UI.icon('wifi') + '192.168.1.20:8080</span></div>' +
+        '<div class="chips"><span>All 13</span><span>Ready 2</span><span>Baking 3</span><span>Late 1</span></div><div class="cards">' +
+        cards.map(function (c) { return '<div class="card ' + c[0] + '"><b>' + c[1] + ' <i>' + c[2] + '</i></b><small>' + c[3] + '</small></div>'; }).join('') + '</div>' +
+        '<div class="go">⚡ Mark baking ready</div></div>' +
+      '<span class="lbl l">Your workbook</span><span class="lbl r">The app it becomes</span>' +
+      '<input type="range" min="4" max="96" value="50" aria-label="Compare the workbook and the app: slide left to see more of the app">' +
+      '<span class="handle"></span></div>';
   }
 
   UI.page('landing', { title: 'Turn a workbook into an app' }, function (view, ctx) {
     var me = ctx.me, C = COPY, esc = UI.esc;
     view.innerHTML =
-      '<section class="lp-hero"><div class="ui-wrap"><div>' +
+      '<section class="lp-hero"><div class="ui-wrap">' +
         '<div class="eyebrow">' + esc(C.eyebrow) + '</div><h1>' + C.title + '</h1><p class="lp-lead">' + esc(C.lead) + '</p>' +
         '<div class="lp-cta">' + SS.dropHtml(me ? 'Drop a workbook to start' : 'Try it now: drop a workbook', me ? '.xlsx or .xlsm, up to 12 MB.' : 'No account needed. The file is read, not kept.') +
         '<div class="alt">' + (me ? '<a class="ui-btn" href="#home" data-go="home">' + UI.icon('grid') + 'Your projects</a>' : '<a class="ui-btn" href="#auth/signup" data-go="auth/signup">Create a free account</a>') +
         '<span>or open an example below</span></div></div>' +
         '<div class="lp-proof">' + C.proof.map(function (p) { return '<span>' + UI.icon('check') + esc(p) + '</span>'; }).join('') + '</div>' +
-      '</div>' + heroArt() + '</div></section>' +
+        heroArt() + '</div></section>' +
       '<section class="lp-section" id="examples"><div class="ui-wrap"><div class="lp-head"><h2>Open an example</h2><p>Three made-up workbooks, each with tables, rules and macros. See what they become.</p></div><div class="ss-pcards" data-examples><div class="ui-skel"></div><div class="ui-skel"></div><div class="ui-skel"></div></div></div></section>' +
       '<section class="lp-section" id="how"><div class="ui-wrap"><div class="lp-head"><h2>How it works</h2><p>From a workbook on your desktop to an app on every phone in the building, in a few minutes.</p></div>' +
         '<div class="lp-steps">' + C.steps.map(function (s) { return '<div class="ui-card lp-step"><h3>' + esc(s[0]) + '</h3><p class="muted">' + esc(s[1]) + '</p></div>'; }).join('') + '</div></div></section>' +
@@ -5115,6 +5122,8 @@
       '<section class="lp-section"><div class="ui-wrap"><div class="lp-band"><div><h2>Got a workbook that runs your day?</h2><p>Give it a proper home on every screen.</p></div>' +
         (me ? '<a class="ui-btn lg accent" href="#home" data-go="home">Open your projects</a>' : '<a class="ui-btn lg accent" href="#auth/signup" data-go="auth/signup">Start free</a>') +
       '</div></div></section>';
+    var ba = view.querySelector('[data-ba]');
+    if (ba) ba.querySelector('input').addEventListener('input', function (e) { ba.style.setProperty('--x', e.target.value + '%'); });
     SS.dropzone(view.querySelector('[data-drop]'), function (file) {
       var busy = SS.reading(file.name);
       var p = me ? UI.upload('upload_workbook', file).then(function (r) { busy.close(); UI.go('project', r.id); })
