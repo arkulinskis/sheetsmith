@@ -283,7 +283,7 @@ native_deps:
     })();\n</script>\n\n<!-- Prepsto feedback panel: every \"Submit feedback\" link and button opens it (it is the only feedback\
     \ channel). No floating button, no cookies, nothing loads until it is opened. Codes: APP_MAKER/prepsto-links.json -->\n\
     <script src=\"https://prepsto.com/_/theme/widget.js\" data-prepsto=\"atfsscf\" data-button=\"false\" data-label=\"Submit\
-    \ feedback\" async></script>\n<link rel=\"stylesheet\" href=\"_/theme/app.css?v=fed4f1bf01\">\n<script src=\"_/theme/app.js?v=d5435a6b3a\"\
+    \ feedback\" async></script>\n<link rel=\"stylesheet\" href=\"_/theme/app.css?v=93c4115728\">\n<script src=\"_/theme/app.js?v=94cc4f6403\"\
     ></script>\n"
 package_name: Sheetsmith
 runtime_options:
