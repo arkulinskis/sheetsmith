@@ -231,16 +231,50 @@ db_schema:
     server: full
     title: Users
 metadata:
-  description: Upload an Excel workbook with its tables, rules and VBA macros and get a web app with a small Python server
-    that runs on any local network.
+  description: Upload an Excel workbook with its tables, formulas, rules and VBA macros and get a web app plus a small Python
+    server that runs on your local network.
   logo_img: asset:icon-512.png
   title: 'Sheetsmith: turn an Excel workbook into a web app'
 name: Sheetsmith
 native_deps:
-  head_html: "<script src=\"_/theme/legal-kit.js?v=0d20f241df\"></script>\n<meta name=\"viewport\" content=\"width=device-width,\
-    \ initial-scale=1, viewport-fit=cover\">\n<meta name=\"theme-color\" content=\"#1d7a4f\">\n<meta name=\"apple-mobile-web-app-capable\"\
-    \ content=\"yes\">\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"\
-    https://fonts.gstatic.com\" crossorigin>\n<link href=\"https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap\"\
+  head_html: "<script src=\"_/theme/legal-kit.js?v=0d20f241df\"></script>\n<!-- seo:start (APP_MAKER/seo: edit seo/apps/sheetsmith.json\
+    \ and run seo.py, not here) -->\n<link rel=\"canonical\" href=\"https://sheetsmith.anvil.app/\">\n<meta name=\"robots\"\
+    \ content=\"index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1\">\n<meta name=\"keywords\" content=\"\
+    excel to web app, convert excel to app, spreadsheet to web app, vba macros to web, xlsm converter, excel database for\
+    \ teams, local network app, no-code excel app, share excel on wifi\">\n<meta name=\"author\" content=\"Arkvital\">\n<meta\
+    \ property=\"og:type\" content=\"website\">\n<meta property=\"og:site_name\" content=\"Sheetsmith\">\n<meta property=\"\
+    og:title\" content=\"Sheetsmith: turn an Excel workbook into a web app\">\n<meta property=\"og:description\" content=\"\
+    Upload an Excel workbook with its tables, formulas, rules and VBA macros and get a web app plus a small Python server\
+    \ that runs on your local network.\">\n<meta property=\"og:locale\" content=\"en_CA\">\n<meta property=\"og:url\" content=\"\
+    https://sheetsmith.anvil.app/\">\n<meta property=\"og:image\" content=\"https://sheetsmith.anvil.app/_/theme/og-image.png\"\
+    >\n<meta property=\"og:image:width\" content=\"1200\"><meta property=\"og:image:height\" content=\"630\">\n<meta property=\"\
+    og:image:alt\" content=\"Sheetsmith: Turn an Excel workbook into a web app for your whole team\">\n<meta name=\"twitter:card\"\
+    \ content=\"summary_large_image\">\n<meta name=\"twitter:title\" content=\"Sheetsmith: turn an Excel workbook into a web\
+    \ app\">\n<meta name=\"twitter:description\" content=\"Upload an Excel workbook with its tables, formulas, rules and VBA\
+    \ macros and get a web app plus a small Python server that runs on your local network.\">\n<meta name=\"twitter:image\"\
+    \ content=\"https://sheetsmith.anvil.app/_/theme/og-image.png\">\n<link rel=\"alternate\" type=\"text/plain\" title=\"\
+    Sheetsmith for AI assistants\" href=\"https://sheetsmith.anvil.app/llms.txt\">\n<script type=\"application/ld+json\">{\"\
+    @context\": \"https://schema.org\", \"@graph\": [{\"@type\": \"WebApplication\", \"@id\": \"https://sheetsmith.anvil.app/#app\"\
+    , \"name\": \"Sheetsmith\", \"url\": \"https://sheetsmith.anvil.app/\", \"description\": \"Upload an Excel workbook with\
+    \ its tables, formulas, rules and VBA macros and get a web app plus a small Python server that runs on your local network.\"\
+    , \"image\": \"https://sheetsmith.anvil.app/_/theme/og-image.png\", \"inLanguage\": \"en\", \"publisher\": {\"@id\": \"\
+    https://arkvital.com/#org\"}, \"keywords\": \"excel to web app, convert excel to app, spreadsheet to web app, vba macros\
+    \ to web, xlsm converter, excel database for teams, local network app, no-code excel app, share excel on wifi\", \"applicationCategory\"\
+    : \"BusinessApplication\", \"operatingSystem\": \"Any (web browser)\", \"browserRequirements\": \"Requires JavaScript\
+    \ and a modern web browser\", \"featureList\": [\"Try a workbook without signing up: it is read in memory and nothing\
+    \ is stored\", \"Keeps tables, formulas, data validation, conditional formats and supported VBA macros\", \"A studio to\
+    \ adjust screens and preview the app live\", \"Download a zip with index.html, server.py, start scripts and a README\"\
+    , \"Runs on any computer on a local network, so the whole team shares one copy of the data\", \"Example workbooks (bakery\
+    \ orders, a tool library, a flooring quote) to explore\"], \"audience\": {\"@type\": \"Audience\", \"audienceType\": \"\
+    Small businesses and teams that run on an Excel workbook and want it as a shared app\"}}, {\"@type\": \"WebSite\", \"\
+    @id\": \"https://sheetsmith.anvil.app/#site\", \"url\": \"https://sheetsmith.anvil.app/\", \"name\": \"Sheetsmith\", \"\
+    publisher\": {\"@id\": \"https://arkvital.com/#org\"}}, {\"@type\": \"Organization\", \"@id\": \"https://arkvital.com/#org\"\
+    , \"name\": \"Arkvital\", \"url\": \"https://arkvital.com\", \"email\": \"arkvital@outlook.com\", \"address\": {\"@type\"\
+    : \"PostalAddress\", \"addressLocality\": \"Montreal\", \"addressRegion\": \"QC\", \"addressCountry\": \"CA\"}}]}</script>\n\
+    <!-- seo:end -->\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">\n<meta\
+    \ name=\"theme-color\" content=\"#1d7a4f\">\n<meta name=\"apple-mobile-web-app-capable\" content=\"yes\">\n<link rel=\"\
+    preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n\
+    <link href=\"https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap\"\
     \ rel=\"stylesheet\">\n<link id=\"ui-favicon\" rel=\"icon\" type=\"image/svg+xml\" href=\"_/theme/icon.svg?v=6daccb156f\"\
     >\n<link rel=\"apple-touch-icon\" href=\"_/theme/icon-180.png?v=6daccb156f\">\n<script>\n/* Keep our tab icon: Anvil adds\
     \ its own <link rel=\"icon\">, so drop any other icon link. */\n(function () {\n  function keep() {\n    var ours = document.getElementById('ui-favicon');\n\
