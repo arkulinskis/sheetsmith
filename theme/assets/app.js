@@ -4885,6 +4885,10 @@
 /* ===== auth.html ===== */
 (function () {
   var esc = UI.esc;
+  var GOOGLE_G = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>' +
+    '<path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>' +
+    '<path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>' +
+    '<path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
   function pw(name, auto) {
     return '<div class="au-pw"><input type="password" name="' + name + '" autocomplete="' + auto + '" required minlength="8">' +
       '<button type="button" data-show>Show</button></div>';
@@ -4907,6 +4911,7 @@
           (window.LegalKit ? '<div>' + LegalKit.consentField() + '</div>' : '') : '') +
         '<div data-msg role="alert"' + (msg ? ' class="' + (isErr ? 'ui-error' : 'ui-note') + '">' + esc(msg) : ' hidden>') + '</div>' +
         '<button class="ui-btn primary block" type="submit">' + { login: 'Sign in', signup: 'Create account', reset: 'Send the link' }[mode] + '</button></form>' +
+        (mode !== 'reset' ? '<div class="au-or">or</div><button type="button" class="ui-btn block au-google" data-google>' + GOOGLE_G + 'Continue with Google</button>' : '') +
         '<div class="au-links">' + (mode === 'login' ? '<a data-mode="reset">Forgot your password?</a>' : '<a data-mode="login">' + UI.icon('back') + ' Back to sign in</a>') +
         '<a href="#landing" data-go="landing">About ' + esc(UI.config.name) + '</a></div></div></div>';
       var first = view.querySelector('input');
@@ -4915,6 +4920,8 @@
     view.addEventListener('click', function (e) {
       var m = e.target.closest('[data-mode]');
       if (m) { e.preventDefault(); mode = m.getAttribute('data-mode'); history.replaceState(null, '', '#auth' + (mode === 'login' ? '' : '/' + mode)); draw(); return; }
+      var g = e.target.closest('[data-google]');
+      if (g) { google(g); return; }
       var s = e.target.closest('[data-show]');
       if (s) { var i = s.parentNode.querySelector('input'); i.type = i.type === 'password' ? 'text' : 'password'; s.textContent = i.type === 'password' ? 'Show' : 'Hide'; }
     });
@@ -4931,6 +4938,14 @@
         else UI.toast(mode === 'signup' ? 'Welcome to ' + UI.config.name + '!' : 'Welcome back!', 'ok');
       }, function (err) { say(err.message, true); });
     });
+    // Sign-up asks for the Privacy & Terms tick here too (ticking it is remembered for the new account).
+    function google(btn) {
+      var form = view.querySelector('form'), v = mode === 'signup' ? UI.formData(form) : {};
+      if (mode === 'signup' && window.LegalKit && !LegalKit.consentChecked(form)) return;
+      UI.busy(btn, UI.auth('google', { name: (v.name || '').trim() })).then(function () {
+        UI.toast(mode === 'signup' ? 'Welcome to ' + UI.config.name + '!' : 'Welcome back!', 'ok');
+      }, function (err) { say(err.message, true); });
+    }
     function say(msg, isErr) {
       var box = view.querySelector('[data-msg]');
       box.className = isErr ? 'ui-error' : 'ui-note'; box.textContent = msg; box.hidden = false;

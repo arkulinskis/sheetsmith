@@ -33,6 +33,14 @@ AUTH_ERRORS = [
 def _me():
     return anvil.server.call("get_me")
 
+def _google_step_done():
+    """After login_with_google() gave None: did the person finish the Google window (they just have no account yet)?"""
+    try:
+        import anvil.google.auth
+        return bool(anvil.google.auth.get_user_email())
+    except Exception:
+        return True  # can't tell: go on to sign-up, which asks Google again if needed
+
 
 def _auth(kind, p):
     email = (p.get("email") or "").strip()
@@ -53,6 +61,14 @@ def _auth(kind, p):
             except anvil.users.AuthenticationFailed:
                 pass  # same answer either way, so nobody can find out which emails have accounts
             return {"ok": True, "message": "If that email has an account, a reset link is on its way."}
+        elif kind == "google":
+            # Continue with Google: sign in, or create the account on the first visit.
+            if anvil.users.login_with_google(remember=True) is None:
+                if not _google_step_done() or anvil.users.signup_with_google(remember=True) is None:
+                    return {"ok": False, "error": "Google sign-in was cancelled."}
+                name = (p.get("name") or "").strip()
+                if name:
+                    anvil.server.call("update_profile", name)
         elif kind == "logout":
             anvil.users.logout()
             legal.signed_out()
@@ -96,7 +112,7 @@ class Main(MainTemplate):
                 # UI.upload(fn, file, ...): the browser File becomes Anvil Media (streamed, no JSON copy of the bytes)
                 media = anvil.js.to_media(window.UI._file)
                 return json.dumps({"result": anvil.server.call(p["fn"], media, *(p.get("args") or []))})
-            if kind in ("login", "signup", "reset", "logout"):
+            if kind in ("login", "signup", "reset", "logout", "google"):
                 return json.dumps({"result": _auth(kind, p)})
             return json.dumps({"error": "Unknown request: %s" % kind})
         except anvil.server.SessionExpiredError:

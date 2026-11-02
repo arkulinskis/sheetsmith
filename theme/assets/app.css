@@ -320,6 +320,9 @@ html.ui-modal-open { overflow: hidden; }
 .au-links { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; font-size: .9rem; flex-wrap: wrap; }
 .au-links a { cursor: pointer; }
 .au-card .lk-consent, .au-card [class*="consent"] { font-size: .9rem; }
+.au-or { display: flex; align-items: center; gap: 12px; margin: 18px 0 14px; color: var(--c-muted); font-size: .85rem; }
+.au-or::before, .au-or::after { content: ""; flex: 1; height: 1px; background: var(--c-line); }
+.au-google svg { width: 18px; height: 18px; flex: none; }
 @media (max-width: 480px) { .au-card { padding: 24px 18px; } }
 
 /* ===== guide.html ===== */
