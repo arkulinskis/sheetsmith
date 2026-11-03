@@ -19,7 +19,9 @@
   var UI = window.UI = { __v: 1, pages: {}, me: null, config: { name: 'App', key: 'app', home: 'home', landing: 'landing' } };
   window.UI_READY = false;
 
-  UI.configure = function (cfg) { Object.keys(cfg).forEach(function (k) { UI.config[k] = cfg[k]; }); };
+  // The saved theme lives under the app's key ('<key>.theme'), which is only known once the app configures UI:
+  // apply it again then, or a saved Light/Dark choice is ignored after every reload.
+  UI.configure = function (cfg) { Object.keys(cfg).forEach(function (k) { UI.config[k] = cfg[k]; }); if (cfg.key && UI.applyTheme) UI.applyTheme(UI.theme()); };
 
   /* ------------------------------------------------------------------ small helpers */
   UI.esc = function (s) {
