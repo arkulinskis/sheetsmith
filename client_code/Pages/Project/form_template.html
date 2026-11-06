@@ -1,0 +1,43 @@
+<anvil-form layout="Sheetsmith.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="ui-wrap st-page">
+      <div class="ui-empty" anvil:name="error_part">
+        <i class="ic ic-info"></i>
+        <h1 class="st-err-h">This project didn't open</h1>
+        <anvil-component type="Label" name="error_text"></anvil-component>
+        <p><a class="ui-btn primary" href="#landing" anvil:name="error_back">Back</a></p>
+      </div>
+      <div anvil:name="studio_part">
+        <a class="st-back" href="#landing" anvil:name="back_link"><i class="ic ic-back"></i><anvil-component type="Label" name="back_text" prop:role='["t"]' prop:text="Sheetsmith"></anvil-component></a>
+        <div class="st-top">
+          <div class="grow st-title">
+            <anvil-component type="Label" name="mark" prop:role='["st-mark"]'></anvil-component>
+            <div class="st-title-text">
+              <anvil-component type="Label" name="title" prop:role='["st-h1"]'></anvil-component>
+              <div class="st-file"><i class="ic ic-grid"></i><anvil-component type="Label" name="file_line" prop:role='["t"]'></anvil-component><anvil-component type="Label" name="saved" prop:role='["st-saved"]'></anvil-component></div>
+            </div>
+          </div>
+          <div class="ui-row">
+            <anvil-component type="Button" name="more_button" prop:text="More" prop:role='["btn", "btn-ghost", "btn-icon", "ic-more"]' prop:tooltip="More"></anvil-component>
+            <anvil-component type="Button" name="preview_button" prop:text="Preview" prop:role='["btn", "ic-play"]'></anvil-component>
+            <anvil-component type="Button" name="get_button" prop:text="Get the app" prop:role='["btn", "btn-primary", "ic-download"]'></anvil-component>
+          </div>
+        </div>
+        <div class="st-banner" anvil:name="banner">
+          <i class="ic ic-info" anvil:name="banner_icon"></i>
+          <p><anvil-component type="Label" name="banner_lead" prop:role='["strong", "t"]'></anvil-component> <anvil-component type="Label" name="banner_text" prop:role='["t"]'></anvil-component></p>
+          <anvil-component type="Button" name="banner_button" prop:role='["btn", "btn-primary"]'></anvil-component>
+        </div>
+        <nav class="ui-tabs st-tabs" aria-label="Studio">
+          <button type="button" anvil:name="t_overview" data-tab="overview" anvil:on-dom:click="self.tab_click"><i class="ic ic-grid"></i>Overview</button>
+          <button type="button" anvil:name="t_screens" data-tab="screens" anvil:on-dom:click="self.tab_click"><i class="ic ic-table"></i>Screens</button>
+          <button type="button" anvil:name="t_rules" data-tab="rules" anvil:on-dom:click="self.tab_click"><i class="ic ic-shield"></i>Rules</button>
+          <button type="button" anvil:name="t_macros" data-tab="macros" anvil:on-dom:click="self.tab_click"><i class="ic ic-bolt"></i>Macros</button>
+          <button type="button" anvil:name="t_preview" data-tab="preview" anvil:on-dom:click="self.tab_click"><i class="ic ic-play"></i>Preview</button>
+          <button type="button" anvil:name="t_get" data-tab="get" anvil:on-dom:click="self.tab_click"><i class="ic ic-download"></i>Get the app</button>
+        </nav>
+        <anvil-component type="LinearPanel" name="body"></anvil-component>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

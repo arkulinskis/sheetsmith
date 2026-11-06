@@ -1,0 +1,33 @@
+<div class="st-edit-host">
+  <div class="ui-card st-edit">
+    <div class="st-edit-h">
+      <div class="st-move">
+        <anvil-component type="Button" name="up_button" prop:text="Move up" prop:role='["st-mv", "btn-icon", "ic-up"]'></anvil-component>
+        <anvil-component type="Button" name="down_button" prop:text="Move down" prop:role='["st-mv", "btn-icon", "ic-chevron"]'></anvil-component>
+      </div>
+      <anvil-component type="Button" name="icon_button" prop:text="Icon" prop:role='["st-iconbtn", "btn-icon"]'></anvil-component>
+      <anvil-component type="TextBox" name="label_box" prop:role='["st-sclabel"]'></anvil-component>
+      <anvil-component type="Label" name="kind" prop:role='["badge", "badge-brand"]' bind:text="self.item['kindLabel']"></anvil-component>
+      <anvil-component type="Label" name="where" prop:role='["st-where"]' bind:text="self.item['where']"></anvil-component>
+      <span class="grow"></span>
+      <anvil-component type="CheckBox" name="show_box" prop:text="Show in the app" prop:role='["switch"]'></anvil-component>
+    </div>
+    <div class="st-edit-b">
+      <div anvil:name="table_part">
+        <div class="ui-row st-pick">
+          <label class="st-mini"><span>Card title</span><anvil-component type="DropDown" name="title_dd"></anvil-component></label>
+          <label class="st-mini"><span>Status chips</span><anvil-component type="DropDown" name="status_dd"></anvil-component></label>
+        </div>
+        <div class="st-cols">
+          <div class="st-col-row st-col-head" aria-hidden="true"><span>Column</span><span>Shown as</span><span>Type</span><span>Show</span></div>
+          <anvil-component type="RepeatingPanel" name="columns_panel" prop:item_template="Sheetsmith.Items.ColumnRow"></anvil-component>
+        </div>
+      </div>
+      <div anvil:name="form_part" class="st-cols">
+        <div class="st-field-row st-col-head" aria-hidden="true"><span>Field</span><span>Cell</span><span>Kind</span></div>
+        <anvil-component type="RepeatingPanel" name="fields_panel" prop:item_template="Sheetsmith.Items.FieldRow"></anvil-component>
+      </div>
+      <p class="muted st-gridnote" anvil:name="grid_part"><anvil-component type="Label" name="grid_text" prop:role='["t"]'></anvil-component></p>
+    </div>
+  </div>
+</div>

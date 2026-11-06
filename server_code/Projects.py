@@ -246,9 +246,10 @@ def save_draft(media, settings=None):
         clean, problem = _clean_settings(settings)
         if not problem:
             r = app_tables.projects.get_by_id(out["id"])
-            r["settings"] = clean
-            if clean.get("title"):
-                r["name"] = clean["title"]
+            if r is not None:
+                r["settings"] = clean
+                if clean.get("title"):
+                    r["name"] = clean["title"]
     return out
 
 

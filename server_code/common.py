@@ -95,7 +95,7 @@ def rate_limited(key, limit, seconds):
               if (stamp - dt.datetime.fromisoformat(t)).total_seconds() < seconds]
     if len(recent) >= limit:
         return True
-    anvil.server.session[store] = recent + [stamp.isoformat()]
+    getattr(anvil.server, "session")[store] = recent + [stamp.isoformat()]
     return False
 
 

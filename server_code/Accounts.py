@@ -25,7 +25,7 @@ def get_me():
     user = anvil.users.get_user()
     if user is None:
         return None
-    changes = {}
+    changes: dict = {}
     if (user["email"] or "").lower() in ADMIN_EMAILS and not user["is_admin"]:
         changes["is_admin"] = True
     seen = user["last_seen"]

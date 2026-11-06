@@ -1,0 +1,22 @@
+<anvil-form layout="Sheetsmith.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="ui-wrap">
+      <div class="hm-head">
+        <div>
+          <anvil-component type="Label" name="hello" prop:role='["page-title"]' prop:text="Your projects"></anvil-component>
+          <anvil-component type="Label" name="count" prop:role='["lead-muted"]'></anvil-component>
+        </div>
+        <a class="ui-btn ghost" href="#guide"><i class="ic ic-info"></i>What converts?</a>
+      </div>
+      <anvil-component type="Sheetsmith.Components.DropZone" name="drop" prop:title="Drop a workbook here" prop:sub=".xlsx or .xlsm, with its tables, rules and VBA macros. Up to 12 MB."></anvil-component>
+      <div class="hm-section" anvil:name="mine_part">
+        <anvil-component type="RepeatingPanel" name="mine_panel" prop:item_template="Sheetsmith.Items.ProjectCard" prop:role='["ss-pcards"]'></anvil-component>
+      </div>
+      <div class="hm-section" anvil:name="examples_part">
+        <h2><i class="ic ic-sparkle"></i>Examples to explore</h2>
+        <p class="muted">Made-up workbooks with tables, rules and macros. Open one to see what Sheetsmith does, or copy it to play with.</p>
+        <anvil-component type="RepeatingPanel" name="examples_panel" prop:item_template="Sheetsmith.Items.ProjectCard" prop:role='["ss-pcards"]'></anvil-component>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

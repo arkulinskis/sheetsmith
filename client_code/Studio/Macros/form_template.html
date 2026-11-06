@@ -1,0 +1,22 @@
+<div class="st-tab">
+  <div class="ui-empty" anvil:name="empty">
+    <i class="ic ic-bolt"></i>
+    <h2>No macros</h2>
+    <p>This workbook has no VBA code. Save it as .xlsm with its macros to bring them along.</p>
+  </div>
+  <div anvil:name="has_part">
+    <div class="ui-card st-score">
+      <div class="st-ring" anvil:name="ring"><anvil-component type="Label" name="score" prop:role='["st-ring-n"]'></anvil-component></div>
+      <div>
+        <anvil-component type="Label" name="headline" prop:role='["st-h2"]'></anvil-component>
+        <p class="muted">Sheetsmith runs VBA in the browser: Range, Cells, tables (ListObjects), loops, MsgBox, InputBox, Dictionary and more. What can't work in a web page (files, Outlook, Windows calls) is listed below.</p>
+        <div class="st-legend">
+          <span><i class="lg-good"></i><anvil-component type="Label" name="l_ok" prop:role='["t"]'></anvil-component></span>
+          <span><i class="lg-part"></i><anvil-component type="Label" name="l_part" prop:role='["t"]'></anvil-component></span>
+          <span><i class="lg-no"></i><anvil-component type="Label" name="l_no" prop:role='["t"]'></anvil-component></span>
+        </div>
+      </div>
+    </div>
+    <anvil-component type="RepeatingPanel" name="modules_panel" prop:item_template="Sheetsmith.Items.ModuleCard"></anvil-component>
+  </div>
+</div>

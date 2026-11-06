@@ -270,7 +270,7 @@ def read_modules(data):
     cf = CompoundFile(data)
     bases = cf.storages_with("dir")
     base = None
-    for b in sorted(bases, key=len):
+    for b in sorted(bases, key=lambda s: len(s)):
         if b.split("/")[-1] == "vba":
             base = b
             break
@@ -331,7 +331,7 @@ def _cfb(streams):
     names = sorted(streams)
     storages = sorted({n.split("/")[0] for n in names if "/" in n})
     # entries: 0 root, then storages, then streams
-    entries = [{"name": "Root Entry", "type": 5, "children": []}]
+    entries: list = [{"name": "Root Entry", "type": 5, "children": []}]
     index = {}
     for s in storages:
         index[s] = len(entries)

@@ -1,0 +1,24 @@
+<div class="st-tab">
+  <div class="st-prevbar">
+    <div class="ui-seg" role="group" aria-label="Device">
+      <button type="button" anvil:name="d_desktop" data-v="desktop" anvil:on-dom:click="self.device_click">Computer</button>
+      <button type="button" anvil:name="d_phone" data-v="phone" anvil:on-dom:click="self.device_click">Phone</button>
+    </div>
+    <div class="ui-seg" role="group" aria-label="Theme">
+      <button type="button" anvil:name="p_light" data-v="light" anvil:on-dom:click="self.theme_click">Light</button>
+      <button type="button" anvil:name="p_dark" data-v="dark" anvil:on-dom:click="self.theme_click">Dark</button>
+    </div>
+    <span class="ui-spacer"></span>
+    <span class="muted small">The real app, running in your browser. Changes here aren't saved.</span>
+    <anvil-component type="Button" name="reload_button" prop:text="Start over" prop:role='["btn", "btn-sm", "ic-refresh"]'></anvil-component>
+    <anvil-component type="Button" name="newtab_button" prop:text="Full window" prop:role='["btn", "btn-sm", "ic-external"]'></anvil-component>
+  </div>
+  <div class="st-stage" anvil:name="stage">
+    <div class="phone"><iframe title="App preview" anvil:dom-node="frame"></iframe></div>
+  </div>
+  <div class="ui-empty" anvil:name="failed">
+    <i class="ic ic-info"></i>
+    <h2>The preview didn't start</h2>
+    <anvil-component type="Label" name="fail_text"></anvil-component>
+  </div>
+</div>

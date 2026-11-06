@@ -1,0 +1,33 @@
+<div class="st-tab">
+  <div class="ui-card st-block">
+    <h2 class="st-h">Data validation <anvil-component type="Label" name="rules_count" prop:role='["badge", "t-inline"]'></anvil-component></h2>
+    <p class="muted" anvil:name="rules_note">The app checks these when people type, with the workbook's own messages. Dropdown lists become choice fields.</p>
+    <div class="st-rtable" anvil:name="rules_table">
+      <div class="st-rrow st-rhead" aria-hidden="true"><span>Sheet</span><span>Cells</span><span>Rule</span><span>Message</span></div>
+      <anvil-component type="RepeatingPanel" name="rules_panel" prop:item_template="Sheetsmith.Items.RuleRow"></anvil-component>
+    </div>
+    <p class="muted" anvil:name="no_rules">No data validation rules in this workbook.</p>
+  </div>
+  <div class="ui-card st-block">
+    <h2 class="st-h">Conditional formats <anvil-component type="Label" name="formats_count" prop:role='["badge", "t-inline"]'></anvil-component></h2>
+    <p class="muted" anvil:name="formats_note">The same colours show up on rows, cards and cells in the app, and they follow tables as they grow.</p>
+    <div class="st-rtable" anvil:name="formats_table">
+      <div class="st-rrow st-rhead" aria-hidden="true"><span>Sheet</span><span>Cells</span><span>When</span><span>Look</span></div>
+      <anvil-component type="RepeatingPanel" name="formats_panel" prop:item_template="Sheetsmith.Items.FormatRow"></anvil-component>
+    </div>
+    <p class="muted" anvil:name="no_formats">No conditional formats in this workbook.</p>
+  </div>
+  <div class="ui-card st-block">
+    <h2 class="st-h">Formulas <anvil-component type="Label" name="formulas_count" prop:role='["badge", "t-inline"]'></anvil-component></h2>
+    <p class="muted"><anvil-component type="Label" name="engine_note" prop:role='["t"]'></anvil-component></p>
+    <anvil-component type="RepeatingPanel" name="fns_panel" prop:item_template="Sheetsmith.Items.FnChip" prop:role='["st-fns"]'></anvil-component>
+    <p class="muted" anvil:name="no_fns">No functions used.</p>
+    <anvil-component type="Label" name="broken" prop:role='["st-broken"]'></anvil-component>
+  </div>
+  <div class="ui-card st-block" anvil:name="names_card">
+    <h2 class="st-h">Named ranges <anvil-component type="Label" name="names_count" prop:role='["badge", "t-inline"]'></anvil-component></h2>
+    <div class="st-rtable">
+      <anvil-component type="RepeatingPanel" name="names_panel" prop:item_template="Sheetsmith.Items.NameRow"></anvil-component>
+    </div>
+  </div>
+</div>

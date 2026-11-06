@@ -1,0 +1,22 @@
+<div class="st-tab">
+  <anvil-component type="RepeatingPanel" name="stats_panel" prop:item_template="Sheetsmith.Items.StatTile" prop:role='["st-stats"]'></anvil-component>
+  <div class="st-two">
+    <div>
+      <h2 class="st-h">Screens in your app</h2>
+      <anvil-component type="RepeatingPanel" name="screens_panel" prop:item_template="Sheetsmith.Items.ScreenCard" prop:role='["st-screens"]'></anvil-component>
+      <p class="muted small st-more">Rename, reorder, hide or adjust columns in <a href="#" anvil:dom-node="screens_link">Screens</a>.</p>
+    </div>
+    <div>
+      <h2 class="st-h">Good to know</h2>
+      <anvil-component type="RepeatingPanel" name="notes_panel" prop:item_template="Sheetsmith.Items.NoteRow" prop:role='["st-notes"]'></anvil-component>
+      <div class="ui-card st-next">
+        <h3>What happens next</h3>
+        <p class="muted">Preview the app here, then download a zip with <code>index.html</code> and <code>server.py</code>. Run it on any computer with Python and open it from every phone and laptop on the same network.</p>
+        <div class="ui-row">
+          <anvil-component type="Button" name="preview_button" prop:text="Preview" prop:role='["btn", "ic-play"]'></anvil-component>
+          <anvil-component type="Button" name="get_button" prop:text="Get the app" prop:role='["btn", "btn-primary", "ic-download"]'></anvil-component>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

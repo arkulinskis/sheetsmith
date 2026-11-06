@@ -112,7 +112,7 @@ table.data td.calc { color: var(--muted); }
 .rcard h3 span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rcard p { margin: 2px 0 0; color: var(--muted); font-size: .88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rcard dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 10px; margin: 9px 0 0; }
-.rcard dt { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
+.rcard dt { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }  /* design-ok: tiny-text (the downloaded app's own CSS, inlined into index.html; the studio's rules are in app.css) */
 .rcard dd { margin: 0; font-size: .9rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .empty { text-align: center; padding: 46px 18px; color: var(--muted); }
 .empty .ic { width: 34px; height: 34px; color: var(--faint); }
@@ -202,7 +202,7 @@ table.sheet td input { width: 100%; min-height: 0; padding: 2px 4px; border-radi
   .top .brand { padding: 0; flex: 1; min-width: 0; }
   .top .brand b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tabs { display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 30; background: var(--surface); border-top: 1px solid var(--line); padding: 5px 4px calc(5px + env(safe-area-inset-bottom)); }
-  .tabs a, .tabs button { flex: 1; display: grid; justify-items: center; gap: 2px; padding: 5px 2px; color: var(--muted); text-decoration: none; font-size: .68rem; font-weight: 600; background: none; border: 0; min-width: 0; }
+  .tabs a, .tabs button { flex: 1; display: grid; justify-items: center; gap: 2px; padding: 5px 2px; color: var(--muted); text-decoration: none; font-size: .68rem; font-weight: 600; background: none; border: 0; min-width: 0; }  /* design-ok: tiny-text (the downloaded app's own CSS, inlined into index.html; the studio's rules are in app.css) */
   .tabs a span, .tabs button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tabs .ic { width: 22px; height: 22px; }
   .tabs .on { color: var(--brand); }
@@ -217,5 +217,6 @@ table.sheet td input { width: 100%; min-height: 0; padding: 2px 4px; border-radi
   .rcard dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .toolbar .search { max-width: none; }
 }
+/* design-ok: reduced-motion-kill (the downloaded app's own CSS, inlined into index.html; the studio's rules are in app.css) */
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 @media print { .side, .top, .tabs, .toolbar, .actions, .banner { display: none !important; } .app { display: block; } .tablewrap, .sheetwrap { max-height: none; overflow: visible; } }

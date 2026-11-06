@@ -1,0 +1,12 @@
+<div class="st-rrow">
+  <anvil-component type="Label" name="sheet" bind:text="self.item['sheet']"></anvil-component>
+  <anvil-component type="Label" name="cells" prop:role='["st-src"]' bind:text="self.item['cells']"></anvil-component>
+  <div>
+    <anvil-component type="Label" name="rule" bind:text="self.item['rule']"></anvil-component>
+    <anvil-component type="Label" name="hint" prop:role='["fine-print"]'></anvil-component>
+  </div>
+  <div>
+    <anvil-component type="Label" name="message" prop:role='["t"]' bind:text="self.item['message']"></anvil-component>
+    <anvil-component type="Label" name="badge" prop:role='["badge", "badge-warn"]' bind:text="self.item['badge']" bind:visible="bool(self.item['badge'])"></anvil-component>
+  </div>
+</div>

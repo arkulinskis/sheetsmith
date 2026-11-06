@@ -1,0 +1,12 @@
+<div class="st-proc">
+  <div class="st-proc-h">
+    <anvil-component type="Label" name="chip" prop:role='["badge"]'></anvil-component>
+    <anvil-component type="Label" name="name" prop:role='["st-proc-name"]' bind:text="self.item['name']"></anvil-component>
+    <anvil-component type="Label" name="what" prop:role='["st-proc-role"]' bind:text="self.item['role']"></anvil-component>
+    <div class="st-act" anvil:name="act_part">
+      <anvil-component type="TextBox" name="label_box" prop:role='["st-actlabel"]'></anvil-component>
+      <anvil-component type="CheckBox" name="act_box" prop:text="Button" prop:role='["switch"]'></anvil-component>
+    </div>
+  </div>
+  <anvil-component type="Label" name="issues" prop:role='["st-issues"]'></anvil-component>
+</div>

@@ -1,0 +1,29 @@
+---
+custom_component: true
+properties:
+  - name: title
+    type: string
+    default_value: "Drop a workbook here"
+    description: The big line in the box
+  - name: sub
+    type: string
+    default_value: ".xlsx or .xlsm, up to 12 MB."
+    description: The small line under it
+events:
+  - name: file_chosen
+    description: A workbook was dropped or chosen (event_args file = the browser File, already checked)
+toolbox_item:
+  title: Workbook drop zone
+  group: Sheetsmith
+help_text: |
+  The dashed box people drop an Excel workbook on (or click to choose one). Checks the file type and size
+  (SS.checkFile), then raises file_chosen with file=the browser File; the page reads it with ss.read_workbook.
+---
+<div class="ss-drop-host">
+  <div class="ss-drop" anvil:dom-node="zone" tabindex="0" role="button" aria-label="Choose a workbook">
+    <input type="file" accept=".xlsx,.xlsm,.xltx,.xltm" hidden>
+    <div class="ss-drop-art" aria-hidden="true"><span></span><span></span><span></span><span class="on"></span></div>
+    <div class="ss-drop-text"><b anvil:dom-node="title_el">Drop a workbook here</b><span anvil:dom-node="sub_el">.xlsx or .xlsm, up to 12 MB.</span></div>
+    <span class="ui-btn primary"><i class="ic ic-upload"></i>Choose a file</span>
+  </div>
+</div>

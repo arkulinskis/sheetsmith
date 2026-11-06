@@ -1,0 +1,61 @@
+<div class="st-tab">
+  <div class="st-get">
+    <div class="ui-card">
+      <h2 class="st-h">Your app</h2>
+      <div class="ui-stack">
+        <label class="ui-field"><span>Name</span><anvil-component type="TextBox" name="title_box"></anvil-component></label>
+        <label class="ui-field"><span>Line under the name <em>(optional)</em></span><anvil-component type="TextBox" name="subtitle_box"></anvil-component></label>
+        <div class="ui-field" role="group" aria-label="Colour"><span>Colour</span>
+          <div class="st-colors">
+            <anvil-component type="RepeatingPanel" name="colors_panel" prop:item_template="Sheetsmith.Items.ColorDot" prop:role='["contents"]'></anvil-component>
+            <input type="color" anvil:dom-node="color_pick" aria-label="Another colour">
+          </div>
+        </div>
+        <div class="ui-field" role="group" aria-label="Start with"><span>Start with</span>
+          <div class="st-keep">
+            <anvil-component type="RepeatingPanel" name="keep_panel" prop:item_template="Sheetsmith.Items.KeepRow" prop:role='["st-keep-list"]'></anvil-component>
+            <anvil-component type="Label" name="no_tables" prop:text="No tables." prop:role='["fine-print"]'></anvil-component>
+          </div>
+        </div>
+        <div class="ui-field" role="group" aria-label="Macros and events"><span>Macros and events</span>
+          <div class="st-keep">
+            <anvil-component type="CheckBox" name="macros_box" prop:text="Run the workbook's macros (buttons)" prop:role='["switch"]'></anvil-component>
+            <anvil-component type="CheckBox" name="events_box" prop:text="Run Worksheet_Change and other events" prop:role='["switch"]'></anvil-component>
+            <anvil-component type="CheckBox" name="readonly_box" prop:text="View only: people can look but not change" prop:role='["switch"]'></anvil-component>
+          </div>
+        </div>
+        <div class="ui-grid two st-pinport">
+          <label class="ui-field"><span>PIN <em>(optional)</em></span><anvil-component type="TextBox" name="pin_box" prop:placeholder="No PIN"></anvil-component></label>
+          <label class="ui-field"><span>Port</span><anvil-component type="TextBox" name="port_box" prop:type="number"></anvil-component></label>
+        </div>
+        <div class="ui-row st-dl">
+          <anvil-component type="Button" name="download_button" prop:text="Download the app (.zip)" prop:role='["btn", "btn-primary", "btn-lg", "ic-download"]'></anvil-component>
+          <anvil-component type="Button" name="html_button" prop:text="Just index.html" prop:role='["btn", "ic-globe"]'></anvil-component>
+        </div>
+        <p class="ui-hint">Free, no account needed for the app itself. It runs offline on your network: nothing calls home.</p>
+      </div>
+    </div>
+    <div class="ui-card">
+      <h2 class="st-h">Run it on your network</h2>
+      <div class="ui-seg" role="group" aria-label="Computer">
+        <button type="button" anvil:name="os_win" data-os="win" anvil:on-dom:click="self.os_click">Windows</button>
+        <button type="button" anvil:name="os_mac" data-os="mac" anvil:on-dom:click="self.os_click">Mac</button>
+        <button type="button" anvil:name="os_linux" data-os="linux" anvil:on-dom:click="self.os_click">Linux / Pi</button>
+      </div>
+      <div class="st-steps">
+        <div><anvil-component type="Label" name="s1h" prop:role='["st-step-h"]'></anvil-component><anvil-component type="Label" name="s1p" prop:role='["st-step-p"]'></anvil-component></div>
+        <div anvil:dom-node="step2"><anvil-component type="Label" name="s2h" prop:role='["st-step-h"]'></anvil-component><anvil-component type="Label" name="s2p" prop:role='["st-step-p"]'></anvil-component></div>
+        <div><h3 class="st-step-title">Open it everywhere</h3><p class="st-step-text">The window shows an address like <code><anvil-component type="Label" name="addr" prop:role='["t"]'></anvil-component></code>. Open it on any phone, tablet or computer on the same Wi-Fi. Everyone sees the same data, live.</p></div>
+      </div>
+      <div anvil:dom-node="after"><div class="st-term" anvil:dom-node="term" tabindex="0" role="region" aria-label="What the server window shows"></div></div>
+      <h3 class="st-zip-h">In the zip</h3>
+      <ul class="st-files">
+        <li>index.html<span>the app</span></li>
+        <li>server.py<span>Python, no installs</span></li>
+        <li>Start (Windows).bat · start.command · start.sh<span>double-click</span></li>
+        <li>README.txt<span>the details</span></li>
+      </ul>
+      <p class="muted small st-data-note">Data lives in <code>data/app.db</code> on that computer, with a backup every day. Export to Excel from the app any time.</p>
+    </div>
+  </div>
+</div>

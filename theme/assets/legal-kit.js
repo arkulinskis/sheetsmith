@@ -158,6 +158,28 @@
     Object.keys(map).forEach(function (k) { if (t[k]) el.style.setProperty(map[k], t[k]); });
     el.classList.toggle('lk-dark', isDark());
     if (isDark() && t.accentDark) el.style.setProperty('--lk-accent', t.accentDark);
+    // text on accent buttons must reach 4.5:1 (WCAG AA): keep the app's ink if it does, else white or near-black
+    var acc = (isDark() && t.accentDark) || t.accent;
+    if (acc && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(acc)) {
+      var ink = t.accentInk || '#ffffff';
+      if (contrast(ink, acc) < 4.5) ink = contrast('#ffffff', acc) >= contrast('#14161a', acc) ? '#ffffff' : '#14161a';
+      el.style.setProperty('--lk-accent-ink', ink);
+    }
+  }
+
+  function lum(hex) {
+    var h = hex.replace('#', '');
+    if (h.length === 3) h = h.replace(/./g, function (c) { return c + c; });
+    var v = [0, 2, 4].map(function (i) {
+      var c = parseInt(h.substr(i, 2), 16) / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  }
+  function contrast(a, b) {
+    if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(a)) return 21;  // a colour we can't read: trust the app
+    var x = lum(a), y = lum(b);
+    return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
   }
 
   // ------------------------------------------------------------------ the page
@@ -249,6 +271,21 @@
 
   function onKey(e) { if (e.key === 'Escape' && page) LK.close(); }
 
+  /* While the page is open, the app behind it is inert: Tab and screen readers stay inside the dialog (WCAG 2.4.3).
+     Only touches elements that weren't inert already, and gives them back on close. */
+  var inerted = [];
+  function setInert(on) {
+    if (on) {
+      inerted = [];
+      Array.prototype.forEach.call(document.body.children, function (el) {
+        if (el !== page && !el.hasAttribute('inert') && el.tagName !== 'SCRIPT') { el.setAttribute('inert', ''); inerted.push(el); }
+      });
+    } else {
+      inerted.forEach(function (el) { el.removeAttribute('inert'); });
+      inerted = [];
+    }
+  }
+
   LK.open = function (tab) {
     if (openFn) { openFn(typeof tab === 'string' ? tab : 'overview'); return; }
     if (!document.body) { document.addEventListener('DOMContentLoaded', function () { LK.open(tab); }); return; }
@@ -263,6 +300,7 @@
       page.addEventListener('click', onPageClick);
       page.addEventListener('change', onPageChange);
       document.body.appendChild(page);
+      setInert(true);
       document.documentElement.classList.add('lk-open');
       page._overflow = document.documentElement.style.overflow;
       document.documentElement.style.overflow = 'hidden';
@@ -275,6 +313,7 @@
   LK.close = function () {
     if (!page) return;
     document.removeEventListener('keydown', onKey);
+    setInert(false);
     document.documentElement.style.overflow = page._overflow || '';
     document.documentElement.classList.remove('lk-open');
     page.remove();

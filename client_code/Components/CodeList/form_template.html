@@ -1,0 +1,14 @@
+---
+custom_component: true
+properties:
+  - name: names
+    type: object
+    description: The words to show, each as a small code chip
+toolbox_item:
+  title: Code chips
+  group: Sheetsmith
+help_text: |
+  A wrapping row of <code> chips (the Guide's lists of formula functions, VBA members and VBA functions). Built with
+  DOM calls (textContent), so hundreds of names draw at once without a RepeatingPanel.
+---
+<div class="gd-fns" anvil:dom-node="box"></div>

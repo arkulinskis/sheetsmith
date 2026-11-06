@@ -1,0 +1,108 @@
+<anvil-form layout="Sheetsmith.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="ui-wrap">
+      <div class="ui-page-head"><div><h1>How Sheetsmith reads a workbook</h1><p class="muted">What comes across, what runs, and how to run your app on a network.</p></div></div>
+      <div class="gd">
+        <nav class="gd-nav" aria-label="Guide sections" anvil:dom-node="nav">
+          <a href="#guide/what" data-sec="what">What converts</a>
+          <a href="#guide/screens" data-sec="screens">Sheets → screens</a>
+          <a href="#guide/formulas" data-sec="formulas">Formulas</a>
+          <a href="#guide/vba" data-sec="vba">VBA macros</a>
+          <a href="#guide/network" data-sec="network">Run it on a network</a>
+          <a href="#guide/limits" data-sec="limits">Limits &amp; privacy</a>
+        </nav>
+        <div>
+          <section id="gd-what">
+            <h2><i class="ic ic-layers"></i>What converts</h2>
+            <div class="ui-card gd-map-card">
+              <div class="gd-map" role="table" aria-label="What converts">
+                <div class="gd-row gd-head" role="row"><span role="columnheader">In the workbook</span><span role="columnheader">Comes across</span><span role="columnheader">In the app</span></div>
+                <div class="gd-row" role="row"><span role="cell">Tables (ListObjects)</span><span role="cell" class="gd-yes">Yes</span><span role="cell">A list screen with search, filters, sorting and a form per row. Calculated columns, totals rows and new rows work like Excel.</span></div>
+                <div class="gd-row" role="row"><span role="cell">Plain lists (a header row with data under it)</span><span role="cell" class="gd-yes">Yes</span><span role="cell">Treated as tables, so they get the same list and form screens.</span></div>
+                <div class="gd-row" role="row"><span role="cell">Sheets with labels and input cells</span><span role="cell" class="gd-yes">Yes</span><span role="cell">A form: inputs on one side, the calculated results on the other, updating as people type.</span></div>
+                <div class="gd-row" role="row"><span role="cell">Other sheets</span><span role="cell" class="gd-yes">Yes</span><span role="cell">Shown as cells (a grid like Excel), with the formulas, formats and merged cells.</span></div>
+                <div class="gd-row" role="row"><span role="cell">Formulas</span><span role="cell" class="gd-yes">Yes</span><span role="cell">Calculated live in the browser. Table references ([@Qty], Orders[Total]), names and cross-sheet references work.</span></div>
+                <div class="gd-row" role="row"><span role="cell">Data validation</span><span role="cell" class="gd-yes">Yes</span><span role="cell">Dropdown lists, whole/decimal/date/time/length limits and custom formulas, with your input hints and error messages (stop, warning or information).</span></div>
+                <div class="gd-row" role="row"><span role="cell">Conditional formatting</span><span role="cell" class="gd-yes">Yes</span><span role="cell">Formulas, value rules, text rules, duplicates, colour scales and data bars, with the workbook's colours.</span></div>
+                <div class="gd-row" role="row"><span role="cell">Number formats</span><span role="cell" class="gd-yes">Yes</span><span role="cell">Money, percent, dates, times, thousands separators, custom formats with text.</span></div>
+                <div class="gd-row" role="row"><span role="cell">Buttons with macros</span><span role="cell" class="gd-yes">Yes</span><span role="cell">Form buttons and shapes that run a macro become buttons on that screen, with the same label.</span></div>
+                <div class="gd-row" role="row"><span role="cell">VBA macros</span><span role="cell" class="gd-part">Mostly</span><span role="cell">The everyday kind runs in the browser (see below). The studio checks each procedure and tells you what wouldn't.</span></div>
+                <div class="gd-row" role="row"><span role="cell">Events</span><span role="cell" class="gd-part">Mostly</span><span role="cell">Worksheet_Change, Worksheet_Activate, Workbook_Open and Workbook_SheetChange run. Selection and save events don't happen in a web app.</span></div>
+                <div class="gd-row" role="row"><span role="cell">UDFs (VBA functions used in cells)</span><span role="cell" class="gd-yes">Yes</span><span role="cell">Public Functions in modules work inside cell formulas.</span></div>
+                <div class="gd-row" role="row"><span role="cell">Charts</span><span role="cell" class="gd-no">Not yet</span><span role="cell">Not yet. The data behind them comes across.</span></div>
+                <div class="gd-row" role="row"><span role="cell">Pivot tables</span><span role="cell" class="gd-no">Not yet</span><span role="cell">Kept as plain values: they won't refresh.</span></div>
+                <div class="gd-row" role="row"><span role="cell">UserForms, ActiveX controls</span><span role="cell" class="gd-no">Not yet</span><span role="cell">Not yet. Their code is listed with the macros.</span></div>
+                <div class="gd-row" role="row"><span role="cell">Links to other workbooks, Power Query, data connections</span><span role="cell" class="gd-no">Not yet</span><span role="cell">Can't be followed from the app.</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="gd-screens">
+            <h2><i class="ic ic-table"></i>Sheets become screens</h2>
+            <p>Sheetsmith looks at each sheet and picks a screen for it:</p>
+            <ul>
+              <li><b>List + form</b> for each table. The first text column is the card title on phones; a dropdown column called Status, Stage or State becomes the filter chips.</li>
+              <li><b>Form</b> when a sheet has labels next to input cells (unlocked cells, cells with validation, or values next to "Label:"). Formula cells next to labels become the results.</li>
+              <li><b>Results</b> when a sheet only has labels next to formulas: a summary with big numbers.</li>
+              <li><b>Sheet</b> for everything else: the cells as they are.</li>
+            </ul>
+            <p>Hidden sheets and sheets that only feed dropdowns (often called Lists or Lookups) start hidden: they still work behind the scenes. In the studio's <b>Screens</b> tab you can rename, reorder and hide screens, pick icons, and change how each column shows (text, money, date, yes/no, choice…).</p>
+          </section>
+
+          <section id="gd-formulas">
+            <h2><i class="ic ic-calc"></i>Formulas</h2>
+            <p><anvil-component type="Label" name="fn_line" prop:role='["t"]' prop:text="The app calculates formulas itself, in the browser, so they work offline. These functions are supported:"></anvil-component></p>
+            <div class="ui-card"><anvil-component type="Sheetsmith.Components.CodeList" name="functions_list"></anvil-component></div>
+            <p class="muted gd-after">Also: A1 and table references (<code>[@Qty]</code>, <code>Orders[Total]</code>, <code>Orders[[#Totals],[Qty]]</code>), named ranges, cross-sheet references, whole columns (<code>A:A</code>), array constants, and VBA Functions from the workbook. FILTER, SORT and UNIQUE give their first value (no spilling yet). A function that isn't on the list shows <code>#NAME?</code>; the studio lists any your workbook uses.</p>
+          </section>
+
+          <section id="gd-vba">
+            <h2><i class="ic ic-bolt"></i>VBA macros</h2>
+            <p>Sheetsmith reads the VBA project out of .xlsm files and runs it in the app with its own VBA interpreter. Buttons run their macros; MsgBox and InputBox show as dialogs.</p>
+            <h3>Statements</h3>
+            <p><code>Sub</code> / <code>Function</code> with ByVal, ByRef, Optional and ParamArray · <code>Dim</code> / <code>Const</code> / <code>ReDim Preserve</code> · <code>If</code> (block and single-line) · <code>Select Case</code> with Is and To · <code>For</code> / <code>For Each</code> / <code>Do</code> / <code>While</code> · <code>With</code> · <code>Exit</code> · <code>On Error Resume Next</code> and <code>On Error GoTo</code> with <code>Resume</code> · <code>GoTo</code> · <code>Call</code> · <code>Option Explicit</code> / <code>Compare Text</code> · Enums and module constants.</p>
+            <h3>Objects</h3>
+            <anvil-component type="RepeatingPanel" name="objects_panel" prop:item_template="Sheetsmith.Items.VbaObject"></anvil-component>
+            <p class="muted">Plus <code>WorksheetFunction.*</code> (every formula function above), <code>Application.VLookup</code> and friends, the <code>xl…</code> and <code>vb…</code> constants, sheet code names (<code>Sheet1.Range…</code>), <code>[A1]</code> shortcuts, <code>Debug.Print</code>. Formatting (Interior, Font, Borders, column widths) is accepted and ignored: the app keeps its own look.</p>
+            <h3>Functions</h3>
+            <div class="ui-card"><anvil-component type="Sheetsmith.Components.CodeList" name="vba_list"></anvil-component></div>
+            <h3>What doesn't run</h3>
+            <ul>
+              <li>Files and folders (Open, Print #, Kill, Dir), and other programs (Shell, Outlook, Word, CreateObject other than Scripting.Dictionary). A web page can't reach them.</li>
+              <li>Windows API calls (Declare), class modules and UserForms.</li>
+              <li>Charts, shapes, pivot tables and printing from code.</li>
+              <li>Events about selecting, double-clicking, saving and closing.</li>
+            </ul>
+            <p class="muted">A macro that runs too long (an endless loop) is stopped, with a message. Changes a macro made before an error are kept, like in Excel.</p>
+          </section>
+
+          <section id="gd-network">
+            <h2><i class="ic ic-wifi"></i>Run it on a network</h2>
+            <ol>
+              <li><b>Pick the computer that shares the app.</b> Any Windows PC, Mac, Linux box or Raspberry Pi that stays on while people work. It needs Python 3.8 or newer: free from <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org</a> (tick "Add python.exe to PATH" on Windows). Macs and Linux usually have it.</li>
+              <li><b>Unzip the download</b> there and double-click <code>Start (Windows).bat</code> or <code>start.command</code> (Mac), or run <code>python3 server.py</code>.</li>
+              <li><b>Open the address</b> it prints, like <code>http://192.168.1.20:8080</code>, on every phone, tablet and computer on the same Wi-Fi. On phones, "Add to Home Screen" makes it open like an app.</li>
+            </ol>
+            <div class="gd-term" tabindex="0" role="region" aria-label="Server options">python3 server.py --port 9000     another port
+python3 server.py --pin 4821     ask for a PIN first
+python3 server.py --reset        start over with the workbook's data (keeps a backup)</div>
+            <p><b>It doesn't open on my phone.</b> Check the phone is on the same Wi-Fi (not mobile data or a guest network), and that the computer's firewall lets Python accept connections on private networks (Windows asks the first time). Office networks sometimes block devices from talking to each other; ask whoever runs the network.</p>
+            <p><b>Updating the app.</b> Change it in Sheetsmith, download again, and replace <code>index.html</code> and <code>server.py</code>. Keep the <code>data</code> folder: your data stays. New tables are added; existing rows are kept.</p>
+            <p><b>Keeping it running.</b> Leave the window open, or start it when the computer starts (Task Scheduler on Windows, a login item on Mac, a systemd service or cron <code>@reboot</code> on Linux).</p>
+          </section>
+
+          <section id="gd-limits">
+            <h2><i class="ic ic-shield"></i>Limits &amp; privacy</h2>
+            <ul>
+              <li>Workbooks up to 12 MB; up to 3,000 rows and 100 columns per sheet, and 40,000 cells in all, are read.</li>
+              <li>Old .xls files: open them in Excel and save as .xlsm first.</li>
+              <li>Trying Sheetsmith without an account: the workbook is read and set aside, nothing is kept. Saved projects keep the workbook in your account until you delete them.</li>
+              <li>The app you download is yours: it runs on your computers, its data stays there, and it never calls Sheetsmith or anyone else.</li>
+            </ul>
+            <p class="muted">Found a workbook Sheetsmith reads wrongly? <a href="https://prepsto.com/#f/atfsscf" target="_blank" rel="noopener" data-prepsto-open>Tell us</a>, ideally with a copy that has no private data in it.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

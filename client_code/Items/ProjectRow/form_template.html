@@ -1,0 +1,18 @@
+<div class="ad-table ad-proj-row">
+  <div class="ad-proj-name">
+    <a anvil:name="link" href="#home"><anvil-component type="Label" name="name" prop:role='["strong", "t"]' bind:text="self.item['name']"></anvil-component></a>
+    <anvil-component type="Label" name="demo_badge" prop:text="Example" prop:role='["badge"]' bind:visible="bool(self.item.get('demo'))"></anvil-component>
+    <anvil-component type="Label" name="summary" prop:role='["fine-print"]'></anvil-component>
+  </div>
+  <div>
+    <anvil-component type="Label" name="owner" prop:role='["ad-email"]' bind:text="self.item.get('owner') or ''"></anvil-component>
+    <anvil-component type="Label" name="owner_email" prop:role='["fine-print", "ad-email"]' bind:text="self.item.get('owner_email') or ''"></anvil-component>
+  </div>
+  <div>
+    <anvil-component type="Label" name="file" prop:role='["ad-email", "small"]' bind:text="self.item.get('file_name') or ''"></anvil-component>
+    <anvil-component type="Label" name="size" prop:role='["fine-print"]'></anvil-component>
+  </div>
+  <anvil-component type="Label" name="changed" prop:role='["fine-print", "ad-joined"]'></anvil-component>
+  <anvil-component type="Label" name="downloads" prop:role='["num"]'></anvil-component>
+  <anvil-component type="Button" name="delete_button" prop:role='["btn", "btn-sm", "btn-danger", "btn-icon", "ic-trash"]' prop:tooltip="Delete this project"></anvil-component>
+</div>

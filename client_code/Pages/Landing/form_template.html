@@ -1,0 +1,167 @@
+<anvil-form layout="Sheetsmith.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="page-landing">
+      <section class="lp-hero">
+        <div class="ui-wrap">
+          <h1>Your workbook, <em>forged into an app</em> your whole team can use</h1>
+          <p class="lp-lead">Drop in an Excel file with its tables, rules and VBA macros. Sheetsmith turns it into a web app and a tiny Python server that runs on any computer on your network, so phones, tablets and laptops all share the same live data.</p>
+          <div class="lp-cta">
+            <anvil-component type="Sheetsmith.Components.DropZone" name="drop" prop:title="Try it now: drop a workbook" prop:sub="No account needed. The file is read, not kept."></anvil-component>
+            <div class="alt">
+              <a class="ui-btn" href="#auth/signup" anvil:name="signup_link">Create a free account</a>
+              <a class="ui-btn" href="#home" anvil:name="projects_link"><i class="ic ic-grid"></i>Your projects</a>
+              <span>or open an example below</span>
+            </div>
+          </div>
+          <div class="lp-proof">
+            <span><i class="ic ic-check"></i>Nothing to install for your team</span>
+            <span><i class="ic ic-check"></i>Runs on your own network</span>
+            <span><i class="ic ic-check"></i>Your data stays with you</span>
+          </div>
+
+          <!-- Before/after stage: left of the handle is the workbook, right of it the app it became. Drag the handle (or use
+               the arrow keys on it) to compare. Both sides show the same orders, so the comparison is honest. -->
+          <div class="lp-ba" anvil:dom-node="ba">
+            <div class="side lp-xl" aria-hidden="true">
+              <div class="bar">Jolie Boulangerie orders.xlsm</div>
+              <div class="fx"><b>E2</b>=[@Qty]*[@[Unit price]]</div>
+              <div class="grid">
+                <span class="h"></span><span class="h">A</span><span class="h x">B</span><span class="h">C</span><span class="h x">D</span><span class="h">E</span><span class="h">F</span><span class="h x">G</span>
+                <span class="h">1</span><span class="th">Customer</span><span class="th x">Item</span><span class="th">Qty</span><span class="th x">Unit price</span><span class="th">Total</span><span class="th">Status</span><span class="th x">Due</span>
+                <span class="h">2</span><span>Café Lumen</span><span class="x">Almond croissant</span><span class="num">24</span><span class="num x">$4.75</span><span class="num sel">$114.00</span><span class="bk">Baking</span><span class="x">Fri</span>
+                <span class="h">3</span><span>Priya N.</span><span class="x">Lemon tart</span><span class="num">6</span><span class="num x">$6.50</span><span class="num">$39.00</span><span class="ok">Ready</span><span class="x">Today</span>
+                <span class="h">4</span><span>Studio Nine</span><span class="x">Sourdough</span><span class="num">4</span><span class="num x">$12.00</span><span class="num">$48.00</span><span class="ok">Ready</span><span class="x">Today</span>
+                <span class="h">5</span><span>Daniel Roy</span><span class="x">Birthday cake</span><span class="num">1</span><span class="num x">$55.00</span><span class="num">$55.00</span><span class="late">Late</span><span class="x">Thu</span>
+                <span class="h">6</span><span>Olivier G.</span><span class="x">Baguette</span><span class="num">2</span><span class="num x">$8.75</span><span class="num">$17.50</span><span>New</span><span class="x">Sat</span>
+                <span class="h">7</span><span></span><span class="x"></span><span></span><span class="x"></span><span></span><span></span><span class="x"></span>
+                <span class="h">8</span><span></span><span class="x"></span><span></span><span class="x"></span><span></span><span></span><span class="x"></span>
+                <span class="h">9</span><span></span><span class="x"></span><span></span><span class="x"></span><span></span><span></span><span class="x"></span>
+              </div>
+              <div class="vba"><span class="k">Sub</span> MarkBakingReady()<br>&nbsp; <span class="k">For</span> i = 1 <span class="k">To</span> tbl.ListRows.Count<br>&nbsp;&nbsp;&nbsp; ...<br><span class="k">End Sub</span></div>
+              <div class="tabs"><span>Orders</span><span>Menu</span><span>Summary</span></div>
+            </div>
+            <div class="side lp-app" aria-hidden="true">
+              <div class="top"><b>JB</b>Orders<span class="wifi"><i class="ic ic-wifi"></i>192.168.1.20:8080</span></div>
+              <div class="chips"><span>All 13</span><span>Ready 2</span><span>Baking 3</span><span>Late 1</span></div>
+              <div class="cards">
+                <div class="card c1"><b>Priya Natarajan <i>Ready</i></b><small>Lemon tart · 6 · $39.00</small></div>
+                <div class="card c2"><b>Daniel Roy <i>Late</i></b><small>Birthday cake · 1 · $55.00</small></div>
+                <div class="card c3"><b>Café Lumen <i>Baking</i></b><small>Almond croissant · 24</small></div>
+                <div class="card"><b>Studio Nine <i>Ready</i></b><small>Sourdough · 4 · $48.00</small></div>
+              </div>
+              <div class="go"><i class="ic ic-bolt"></i> Mark baking ready</div>
+            </div>
+            <span class="lbl l">Your workbook</span><span class="lbl r">The app it becomes</span>
+            <input type="range" min="4" max="96" value="50" anvil:dom-node="ba_range" aria-label="Compare the workbook and the app: slide left to see more of the app">
+            <span class="handle"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="lp-section ytf" id="watch">
+        <div class="ui-wrap">
+          <div class="ytf-in">
+            <div class="ytf-copy">
+              <h2>See Sheetsmith in about a minute</h2>
+              <p>A short video tour of what Sheetsmith does and how it works.</p>
+              <a class="ytf-link" href="https://www.youtube.com/watch?v=KvFAg0fOglU" target="_blank" rel="noopener"><svg viewBox="0 0 28 20" width="20" height="14" aria-hidden="true"><rect width="28" height="20" rx="5" fill="#FF0033"/><path d="M11.2 5.8v8.4l7.3-4.2z" fill="#fff"/></svg>Watch on YouTube &#8599;</a>
+            </div>
+            <div>
+              <div class="ytf-frame" anvil:dom-node="yt_frame">
+                <button type="button" class="ytf-cover" anvil:dom-node="yt_cover" data-yt-film="KvFAg0fOglU" data-yt-title="Sheetsmith video" aria-label="Play the Sheetsmith video (1:11)">
+                  <img src="_/theme/yt-cover.jpg" alt="" loading="lazy" decoding="async" width="960" height="540">
+                  <span class="ytf-play" aria-hidden="true"><svg viewBox="0 0 68 48" width="68" height="48"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C55.3.3 34 .3 34 .3s-21.3 0-26.5 1.4a8.5 8.5 0 0 0-6 6C.1 13 .1 24 .1 24s0 11 1.4 16.3a8.5 8.5 0 0 0 6 6c5.2 1.4 26.5 1.4 26.5 1.4s21.3 0 26.5-1.4a8.5 8.5 0 0 0 6-6C67.9 35 67.9 24 67.9 24s0-11-1.4-16.3z" fill="#FF0033"/><path d="M45 24 27 14v20z" fill="#fff"/></svg></span>
+                  <span class="ytf-len">1:11</span>
+                </button>
+              </div>
+              <p class="ytf-note">The video loads from YouTube when you press play.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="lp-section" id="examples">
+        <div class="ui-wrap">
+          <div class="lp-head"><h2>Open an example</h2><p>Three made-up workbooks, each with tables, rules and macros. See what they become.</p></div>
+          <anvil-component type="RepeatingPanel" name="examples_panel" prop:item_template="Sheetsmith.Items.ProjectCard" prop:role='["ss-pcards"]'></anvil-component>
+          <p class="muted" anvil:name="no_examples">No examples right now.</p>
+        </div>
+      </section>
+
+      <section class="lp-section" id="how">
+        <div class="ui-wrap">
+          <div class="lp-head"><h2>How it works</h2><p>From a workbook on your desktop to an app on every phone in the building, in a few minutes.</p></div>
+          <div class="lp-steps">
+            <div class="ui-card lp-step"><h3>Drop in your workbook</h3><p class="muted">Sheetsmith reads every sheet: tables, formulas, dropdowns and checks, conditional colours, buttons and the VBA behind them.</p></div>
+            <div class="ui-card lp-step"><h3>Shape the app</h3><p class="muted">Rename screens, pick columns and types, choose which macros become buttons. Preview the real app as a phone or a laptop.</p></div>
+            <div class="ui-card lp-step"><h3>Run it on your network</h3><p class="muted">Download a zip, double-click the start file, and open the address it shows on every device on your Wi-Fi.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="lp-section">
+        <div class="ui-wrap">
+          <div class="lp-head"><h2>What comes across</h2><p>The parts of a workbook that make it an app, not just a table.</p></div>
+          <div class="lp-feats">
+            <div class="lp-feat"><i class="ic ic-table"></i><h3>Tables become apps</h3><p>Search, filter chips, sorting, cards on phones and a form for every row, with totals rows and calculated columns.</p></div>
+            <div class="lp-feat"><i class="ic ic-calc"></i><h3>Formulas keep working</h3><p><anvil-component type="Label" name="fn_count" prop:role='["t"]' prop:text="More than 160 Excel functions"></anvil-component> calculate live: XLOOKUP, SUMIFS, INDEX/MATCH, dates, text and table references.</p></div>
+            <div class="lp-feat"><i class="ic ic-shield"></i><h3>Rules stay rules</h3><p>Dropdown lists, number and date limits and custom checks, with the error messages you wrote in Excel.</p></div>
+            <div class="lp-feat"><i class="ic ic-sparkle"></i><h3>Same colours</h3><p>Conditional formats colour rows, cards and chips just like the sheet: late orders red, ready ones green.</p></div>
+            <div class="lp-feat"><i class="ic ic-bolt"></i><h3>Macros that really run</h3><p>Buttons run your VBA in the browser: Range, Cells, ListObjects, loops, MsgBox, InputBox, Dictionary, events.</p></div>
+            <div class="lp-feat"><i class="ic ic-edit"></i><h3>Forms and calculators</h3><p>Sheets with labels and input cells become forms, with the results updating as people type.</p></div>
+            <div class="lp-feat"><i class="ic ic-users"></i><h3>Shared and live</h3><p>Everyone on the network sees changes within seconds. The activity list shows who changed what.</p></div>
+            <div class="lp-feat"><i class="ic ic-download"></i><h3>Back to Excel any time</h3><p>One click exports the current data as an .xlsx with its tables and formulas.</p></div>
+          </div>
+          <div class="lp-not"><b>Not yet:</b><span class="ui-badge">Charts</span><span class="ui-badge">Pivot tables</span><span class="ui-badge">UserForms</span><span class="ui-badge">Macros that use files, Outlook or Windows</span><a href="#guide">The full list</a></div>
+        </div>
+      </section>
+
+      <section class="lp-section">
+        <div class="ui-wrap lp-server">
+          <div>
+            <h2>A server the size of a file</h2>
+            <p class="muted lp-server-lead">The download is a folder with your app and one Python file, <code>server.py</code>. No database to set up, no cloud account, no monthly bill. Leave it running on an office PC, a Mac mini or a Raspberry Pi.</p>
+            <div class="lp-list">
+              <div><i class="ic ic-database"></i><div><b>Saves everything in SQLite</b><span>One file, with a backup every day. Copy the folder to move it.</span></div></div>
+              <div><i class="ic ic-clock"></i><div><b>Knows who changed what</b><span>An activity list for the whole team, with names.</span></div></div>
+              <div><i class="ic ic-lock"></i><div><b>Optional PIN</b><span>Keep the app to the people who know the code.</span></div></div>
+              <div><i class="ic ic-phone"></i><div><b>Add to home screen</b><span>On phones it opens full screen, like an app.</span></div></div>
+            </div>
+          </div>
+          <div class="lp-term" tabindex="0" role="img" aria-label="The server starting in a terminal: Juniper Bakery order book is running at http://192.168.1.20:8080"><span class="g">C:\Apps\juniper-bakery&gt;</span> python server.py
+
+  Juniper Bakery order book is running.
+    On this computer:   http://localhost:8080/
+    On your network:    <span class="a">http://192.168.1.20:8080/</span>
+                        &lt;- open this on phones
+  Data is saved in data/app.db.
+  Press Ctrl+C to stop.</div>
+        </div>
+      </section>
+
+      <section class="lp-section">
+        <div class="ui-wrap">
+          <div class="lp-head"><h2>Questions</h2></div>
+          <div class="lp-faq">
+            <details><summary>Does my team need to install anything?</summary><p>No. Only the computer that shares the app needs Python (free, and already on Macs and Linux). Everyone else just opens an address in their browser.</p></details>
+            <details><summary>Is my workbook stored?</summary><p>When you try Sheetsmith without an account, the file is read and set aside: nothing is kept. When you save a project, the workbook is stored in your account so you can change the app later. You can delete it any time.</p></details>
+            <details><summary>Does the app need the internet?</summary><p>No. Once downloaded it runs entirely on your network: the server, the formulas and the macros all run on your own computers.</p></details>
+            <details><summary>Which VBA works?</summary><p>The everyday kind: subs and functions, If/Select/For/Do, Range, Cells, worksheets, tables (ListObjects), MsgBox and InputBox, Dictionary, string and date functions, WorksheetFunction, and the Worksheet_Change event. The Macros tab checks every procedure and tells you exactly what would not run.</p></details>
+            <details><summary>Can several people change things at once?</summary><p>Yes. Each change is sent to the server and everyone else sees it within a few seconds. Rows are kept separately, so two people adding orders at the same time don't overwrite each other.</p></details>
+            <details><summary>How big can the workbook be?</summary><p>Up to 12 MB, with up to 3,000 rows per sheet. That covers most workbooks people use as apps; bigger data is better off in a real database.</p></details>
+            <details><summary>Is it secure?</summary><p>The app is meant for networks you trust (home, office, shop). Anyone on the network can open it unless you set a PIN. It never sends your data anywhere.</p></details>
+          </div>
+        </div>
+      </section>
+
+      <section class="lp-section">
+        <div class="ui-wrap">
+          <div class="lp-band">
+            <div><h2>Got a workbook that runs your day?</h2><p>Give it a proper home on every screen.</p></div>
+            <a class="ui-btn lg accent" href="#auth/signup" anvil:name="band_link">Start free</a>
+          </div>
+        </div>
+      </section>
+    </div>
+  </anvil-block>
+</anvil-form>

@@ -375,7 +375,7 @@ def read_sheet(pkg, path, strings, xfs, dxfs, theme, warnings, budget):
         sheet["tabColor"] = color_of(tc, theme)
     for col in root.findall("m:cols/m:col", NS):
         try:
-            lo, hi, w = int(col.get("min")), int(col.get("max")), float(col.get("width") or 0)
+            lo, hi, w = int(col.get("min")), int(col.get("max")), float(col.get("width") or 0)  # type: ignore
         except (TypeError, ValueError):
             continue
         hidden = col.get("hidden") in ("1", "true")
@@ -421,7 +421,7 @@ def read_sheet(pkg, path, strings, xfs, dxfs, theme, warnings, budget):
             val = None
             if t == "s" and v_el is not None:
                 try:
-                    val = strings[int(v_el.text)]
+                    val = strings[int(v_el.text)]  # type: ignore
                 except (TypeError, ValueError, IndexError):
                     val = ""
             elif t == "inlineStr":
@@ -449,7 +449,7 @@ def read_sheet(pkg, path, strings, xfs, dxfs, theme, warnings, budget):
                 cut_rows = stop = True
                 break
             budget[0] -= 1
-            cells[ref.upper().replace("$", "")] = cell
+            cells[ref.upper().replace("$", "")] = cell  # type: ignore
             sheet["rows"] = max(sheet["rows"], r)
             sheet["cols"] = max(sheet["cols"], ci)
         if stop:
@@ -482,7 +482,7 @@ def read_sheet(pkg, path, strings, xfs, dxfs, theme, warnings, budget):
         rules = []
         for rule in cf.findall("m:cfRule", NS):
             try:
-                style = dxfs[int(rule.get("dxfId"))] if rule.get("dxfId") is not None else {}
+                style = dxfs[int(rule.get("dxfId"))] if rule.get("dxfId") is not None else {}  # type: ignore
             except (ValueError, IndexError):
                 style = {}
             item = {"type": rule.get("type") or "", "op": rule.get("operator") or "", "style": style,
@@ -495,7 +495,7 @@ def read_sheet(pkg, path, strings, xfs, dxfs, theme, warnings, budget):
                 item["colors"] = [color_of(rule.find("m:dataBar/m:color", NS), theme)]
             rules.append(item)
         if cf.get("sqref") and rules:
-            sheet["condFormats"].append({"sqref": cf.get("sqref").split(), "rules": rules})
+            sheet["condFormats"].append({"sqref": cf.get("sqref").split(), "rules": rules})  # type: ignore
     sheet["_root"] = root
     return sheet
 

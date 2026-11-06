@@ -1,0 +1,13 @@
+<div class="st-mod-host">
+  <div class="ui-card st-mod">
+    <div class="st-mod-h">
+      <anvil-component type="Label" name="name" prop:role='["st-mod-name"]' bind:text="self.item['name']"></anvil-component>
+      <anvil-component type="Label" name="kind" prop:role='["badge"]' bind:text="self.item['kind']"></anvil-component>
+      <anvil-component type="Label" name="lines" prop:role='["fine-print"]' bind:text="self.item['lines']"></anvil-component>
+      <span class="ui-spacer"></span>
+      <anvil-component type="Button" name="code_button" prop:text="Show code" prop:role='["btn", "btn-sm", "btn-ghost", "ic-code"]'></anvil-component>
+    </div>
+    <anvil-component type="RepeatingPanel" name="procs_panel" prop:item_template="Sheetsmith.Items.ProcRow"></anvil-component>
+    <pre class="st-code" anvil:dom-node="code" tabindex="0" hidden></pre>
+  </div>
+</div>

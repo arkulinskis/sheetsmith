@@ -1,0 +1,17 @@
+<div class="ss-pcard-host">
+  <a class="ui-card ss-pcard" anvil:name="card" href="#home">
+    <div class="top">
+      <anvil-component type="Label" name="mark" prop:role='["mk"]'></anvil-component>
+      <div class="ss-pcard-name">
+        <anvil-component type="Label" name="name" prop:role='["pc-title"]' bind:text="self.item['name']"></anvil-component>
+        <anvil-component type="Label" name="file" prop:role='["pc-file"]' bind:text="self.item.get('file_name') or ''"></anvil-component>
+      </div>
+    </div>
+    <anvil-component type="Label" name="blurb" prop:role='["pc-blurb"]'></anvil-component>
+    <anvil-component type="Label" name="chips" prop:role='["pc-chips"]'></anvil-component>
+    <div class="foot">
+      <anvil-component type="Label" name="when" prop:role='["pc-foot"]'></anvil-component>
+      <span class="pc-dl"><i class="ic ic-download"></i><anvil-component type="Label" name="downloads" prop:role='["pc-foot"]'></anvil-component></span>
+    </div>
+  </a>
+</div>
