@@ -457,7 +457,7 @@
         '</div></div>';
     },
     footer: function (me) {
-      return '<div class="ui-footer-in"><div class="ui-footer-brand">' + brand() + '<p class="muted small">' + esc(UI.config.tagline) + '</p></div>' +
+      return '<div class="ui-footer-in"><div class="ui-footer-brand">' + brand() + '<p class="muted small">' + esc(UI.config.tagline) + '</p><p class="small muted ui-footer-org">Contact developer: <a href="https://arkvital.com" target="_blank" rel="noopener">arkvital.com</a><br>Parent company: <a href="https://addanapp.com" target="_blank" rel="noopener">addanapp.com</a></p></div>' +
         '<div class="ui-footer-links">' +
         '<a href="#landing" data-go="landing">About</a>' +
         '<a href="https://prepsto.com/#f/atfsscf" target="_blank" rel="noopener" data-prepsto-open>Submit feedback</a>' +
