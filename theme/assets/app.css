@@ -582,7 +582,7 @@ html.ui-modal-open { overflow: hidden; }
 .st-two > * { min-width: 0; }
 .anvil-role-st-screens > div { display: grid; gap: 10px; }
 .st-sc { display: flex; gap: 12px; align-items: center; padding: 12px 14px; }
-.st-sc .ic-box { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--c-brand-soft); color: var(--c-brand); flex: none; }
+.st-sc .st-icbox { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--c-brand-soft); color: var(--c-brand); flex: none; }
 .st-sc .grow { flex: 1; min-width: 0; }
 .anvil-role-st-sc-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .anvil-role-st-sc-line { color: var(--c-muted); font-size: .88rem; }
@@ -938,3 +938,13 @@ anvil-dropzone { display: contents; }
 .lp-faq details p, .ui .gd section > p, .ui .gd section li, .st-intro, .st-score p.muted, .st-banner p { max-width: 72ch; }
 .lp-not a { display: inline-block; padding: 4px 0; }
 .anvil-role-st-mv > button { height: 24px; }
+/* the switch keeps its own size inside grids (the .ui field rule would stretch it) */
+.ui .anvil-role-switch input[type=checkbox] { width: 38px; height: 22px; min-height: 0; padding: 0; border: 0; box-shadow: none; }
+.st-col-row > :last-child, .st-field-row > :last-child { justify-self: start; }
+.st-field-row .anvil-role-badge, .st-rrow .anvil-role-badge { justify-self: start; width: auto; display: inline-flex; }
+.ui select:disabled, .ui input:disabled:not([type=checkbox]), .ui textarea:disabled { background: var(--c-surface-2); color: var(--c-muted); opacity: 1; -webkit-text-fill-color: var(--c-muted); }
+/* project cards: pills, tight lines (Anvil's default component spacing off inside cards) */
+.anvil-role-pc-chips > div { display: flex; gap: 6px; flex-wrap: wrap; }
+.pc-chip-host { display: contents; }
+.ss-pcard .anvil-label[class*="anvil-spacing-"], .st-page .anvil-label[class*="anvil-spacing-"] { padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0; }
+.ui-shell .anvil-role-avatar > button { border-radius: var(--radius-btn); }
