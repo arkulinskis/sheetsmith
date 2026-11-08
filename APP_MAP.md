@@ -7,7 +7,7 @@ around them with an offset instead of whole files.
 
 **What it is:** Upload an Excel workbook with its tables, formulas, rules and VBA macros and get a web app plus a small Python server that runs on your local network.
 **Live:** https://sheetsmith.anvil.app · **Repo:** github.com/arkulinskis/sheetsmith · **Layout:** native Anvil Forms · **Deploy:** master
-**Guide** (workflow, design rules, product knowledge): `sheetsmith/.claude/skills/sheetsmith/SKILL.md`
+**Guide** (workflow, design rules, product knowledge): `.claude/skills/sheetsmith/SKILL.md`
 
 ## How to change it
 
