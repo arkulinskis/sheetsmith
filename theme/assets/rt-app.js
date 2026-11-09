@@ -878,7 +878,7 @@
         if (mv) { e.preventDefault(); gridSelect(view, current, sel.r + mv[0], sel.c + mv[1]); return; }
         if (e.key === 'Enter' || e.key === 'F2') { e.preventDefault(); gridEdit(view, current); return; }
         if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); var c0 = wb.cellAt(current.sheet, sel.r, sel.c); if (c0 && !c0.virtual && !APP.readOnly) { store.send(wb.setCell(current.sheet, sel.r, sel.c, null)); renderScreen(); } return; }
-        if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); gridEdit(view, current, e.key); }
+        if ((e.key || '').length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); gridEdit(view, current, e.key); }
       }
     });
     window.addEventListener('hashchange', route);
