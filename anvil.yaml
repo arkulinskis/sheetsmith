@@ -231,10 +231,9 @@ db_schema:
     server: full
     title: Users
 metadata:
-  description: Upload an Excel workbook with its tables, formulas, rules and VBA macros and get a web app plus a small Python
-    server that runs on your local network.
-  logo_img: asset:icon-512.png
-  title: 'Sheetsmith: turn an Excel workbook into a web app'
+  description: "Upload an Excel workbook with its tables, formulas, rules and VBA macros and get a web app plus a small Python server that runs on your local network."
+  logo_img: "asset:icon-512.png"
+  title: "Sheetsmith: turn an Excel workbook into a web app"
 name: Sheetsmith
 native_deps:
   head_html: |
@@ -258,7 +257,7 @@ native_deps:
     <meta name="twitter:description" content="Upload an Excel workbook with its tables, formulas, rules and VBA macros and get a web app plus a small Python server that runs on your local network.">
     <meta name="twitter:image" content="https://sheetsmith.anvil.app/_/theme/og-image.png">
     <link rel="alternate" type="text/plain" title="Sheetsmith for AI assistants" href="https://sheetsmith.anvil.app/llms.txt">
-    <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebApplication", "@id": "https://sheetsmith.anvil.app/#app", "name": "Sheetsmith", "url": "https://sheetsmith.anvil.app/", "description": "Upload an Excel workbook with its tables, formulas, rules and VBA macros and get a web app plus a small Python server that runs on your local network.", "image": "https://sheetsmith.anvil.app/_/theme/og-image.png", "inLanguage": "en", "publisher": {"@id": "https://arkvital.com/#org"}, "keywords": "excel to web app, convert excel to app, spreadsheet to web app, vba macros to web, xlsm converter, excel database for teams, local network app, no-code excel app, share excel on wifi", "applicationCategory": "BusinessApplication", "operatingSystem": "Any (web browser)", "browserRequirements": "Requires JavaScript and a modern web browser", "featureList": ["Try a workbook without signing up: it is read in memory and nothing is stored", "Keeps tables, formulas, data validation, conditional formats and supported VBA macros", "A studio to adjust screens and preview the app live", "Download a zip with index.html, server.py, start scripts and a README", "Runs on any computer on a local network, so the whole team shares one copy of the data", "Example workbooks (bakery orders, a tool library, a flooring quote) to explore"], "audience": {"@type": "Audience", "audienceType": "Small businesses and teams that run on an Excel workbook and want it as a shared app"}}, {"@type": "WebSite", "@id": "https://sheetsmith.anvil.app/#site", "url": "https://sheetsmith.anvil.app/", "name": "Sheetsmith", "publisher": {"@id": "https://arkvital.com/#org"}}, {"@type": "Organization", "@id": "https://arkvital.com/#org", "name": "Arkvital", "url": "https://arkvital.com", "email": "arkvital@outlook.com", "address": {"@type": "PostalAddress", "addressLocality": "Montreal", "addressRegion": "QC", "addressCountry": "CA"}}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Service", "@id": "https://sheetsmith.anvil.app/#app", "name": "Sheetsmith", "url": "https://sheetsmith.anvil.app/", "description": "Upload an Excel workbook with its tables, formulas, rules and VBA macros and get a web app plus a small Python server that runs on your local network.", "image": "https://sheetsmith.anvil.app/_/theme/og-image.png", "serviceType": "Turn an Excel workbook into a web app for your whole team", "provider": {"@id": "https://arkvital.com/#org"}, "areaServed": "Worldwide", "availableChannel": {"@type": "ServiceChannel", "serviceUrl": "https://sheetsmith.anvil.app/", "name": "Web browser"}, "availableLanguage": "en", "audience": {"@type": "Audience", "audienceType": "Small businesses and teams that run on an Excel workbook and want it as a shared app"}}, {"@type": "WebSite", "@id": "https://sheetsmith.anvil.app/#site", "url": "https://sheetsmith.anvil.app/", "name": "Sheetsmith", "publisher": {"@id": "https://arkvital.com/#org"}}, {"@type": "Organization", "@id": "https://arkvital.com/#org", "name": "Arkvital", "url": "https://arkvital.com", "email": "arkvital@outlook.com", "address": {"@type": "PostalAddress", "addressLocality": "Montreal", "addressRegion": "QC", "addressCountry": "CA"}}]}</script>
     <!-- seo:end -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#1d7a4f">
