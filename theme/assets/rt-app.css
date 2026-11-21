@@ -190,6 +190,28 @@ table.sheet td input { width: 100%; min-height: 0; padding: 2px 4px; border-radi
 .log .row:last-child { border-bottom: 0; }
 .log .who { font-weight: 700; min-width: 0; }
 .log .when { margin-left: auto; color: var(--faint); font-size: .82rem; white-space: nowrap; }
+.log .what { min-width: 0; overflow-wrap: anywhere; }
+.log .log-more { padding: 10px 16px; margin: 0; }
+.logwho select { min-width: 150px; max-width: 220px; }
+/* paste rows */
+.paste-box { font-family: var(--mono); font-size: .85rem; min-height: 140px; white-space: pre; overflow-x: auto; }
+.paste-sum p { margin: 6px 0; overflow-wrap: anywhere; }
+.paste-count { font-size: 1rem; }
+.paste-prev { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; margin: 8px 0; }
+.paste-prev table.data td { max-width: 200px; }
+.warn-text { color: var(--warn); font-weight: 600; }
+/* a record's history */
+.hist { margin-top: 6px; border: 1px solid var(--line); border-radius: 10px; }
+.hist summary { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; font-weight: 600; list-style: none; }
+.hist summary::-webkit-details-marker { display: none; }
+.hist summary .faint { font-weight: 400; margin-left: auto; }
+.hist-list { border-top: 1px solid var(--line); max-height: 260px; overflow-y: auto; }
+.hist-list > p { margin: 0; padding: 10px 12px; }
+.hist-list .row { display: flex; flex-wrap: wrap; gap: 4px 10px; padding: 8px 12px; border-bottom: 1px solid var(--line); align-items: baseline; font-size: .9rem; }
+.hist-list .row:last-child { border-bottom: 0; }
+.hist-list .who { font-weight: 700; }
+.hist-list .what { min-width: 0; overflow-wrap: anywhere; }
+.hist-list .when { margin-left: auto; color: var(--faint); font-size: .8rem; white-space: nowrap; }
 .pinbox { max-width: 360px; margin: 14vh auto; padding: 28px; text-align: center; }
 .pinbox input { text-align: center; font-size: 1.4rem; letter-spacing: .3em; margin: 14px 0; }
 
@@ -216,6 +238,9 @@ table.sheet td input { width: 100%; min-height: 0; padding: 2px 4px; border-radi
   .modal { padding: 20px 16px; }
   .rcard dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .toolbar .search { max-width: none; }
+  .log .row { flex-wrap: wrap; gap: 2px 10px; padding: 10px 14px; }
+  .log .what { flex-basis: 100%; order: 3; }
+  .logwho, .logwho select { width: 100%; max-width: none; }
 }
 /* design-ok: reduced-motion-kill (the downloaded app's own CSS, inlined into index.html; the studio's rules are in app.css) */
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }

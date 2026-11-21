@@ -54,8 +54,23 @@
         <li>server.py<span>Python, no installs</span></li>
         <li>Start (Windows).bat · start.command · start.sh<span>double-click</span></li>
         <li>README.txt<span>the details</span></li>
+        <li>FOR-IT.txt<span>for your IT team</span></li>
       </ul>
       <p class="muted small st-data-note">Data lives in <code>data/app.db</code> on that computer, with a backup every day. Export to Excel from the app any time.</p>
+    </div>
+    <div class="ui-card st-it">
+      <h2 class="st-h">For your IT team</h2>
+      <p class="st-it-lead">IT often blocks macro workbooks. This app isn't a macro file: hand them this note so they can say yes quickly.</p>
+      <ul class="st-it-list">
+        <li><b>No internet.</b> The page loads nothing from outside, and <code>server.py</code> makes no outgoing calls.</li>
+        <li><b>One Python file</b>, standard library only. Nothing to install, nothing written outside its folder.</li>
+        <li><b>Macros run sandboxed</b> in the browser page, not in Office: no files, other programs or network.</li>
+        <li><b>Local network only:</b> one port <code><anvil-component type="Label" name="it_port" prop:role='["t"]'></anvil-component></code>, optional PIN, daily backups, a who-changed-what log.</li>
+      </ul>
+      <div class="ui-row">
+        <anvil-component type="Button" name="it_button" prop:text="Download the IT note" prop:role='["btn", "ic-download"]'></anvil-component>
+      </div>
+      <p class="ui-hint">It's in the zip too, as FOR-IT.txt, filled in with this app's port, PIN setting and macros.</p>
     </div>
   </div>
 </div>

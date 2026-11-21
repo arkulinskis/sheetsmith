@@ -1,0 +1,44 @@
+{{TITLE}}: A NOTE FOR YOUR IT TEAM
+Made with Sheetsmith (https://sheetsmith.anvil.app) from {{FILE}} on {{DATE}}.
+
+In short: the team's Excel workbook now runs as a small web page on your own network. Nothing goes to the
+internet and nothing needs installing except Python. Below is everything it does, so you can approve it.
+
+WHAT IT IS
+  index.html   One web page: the app (HTML, CSS, JavaScript, the data inline). No external scripts, fonts or
+               trackers: it loads nothing from the internet.
+  server.py    One Python file, standard library only (Python 3.8+, no pip packages). Read it: about 800 lines.
+               It serves index.html and keeps the shared data in SQLite.
+
+NETWORK
+  Listens on:      TCP port {{PORT}} (the next free one up to {{PORT_MAX}} if it's busy), all network cards.
+                   Local only instead:  python server.py --host 127.0.0.1
+  Outgoing calls:  none. (To print its own address it opens a UDP socket to 10.255.255.255 without sending
+                   anything, and opens a browser on the same computer; --no-browser turns that off.)
+  Firewall:        allow inbound TCP {{PORT}} on Private networks only. It is not meant to face the internet.
+  Access:          {{PIN_LINE}}
+                   Plain HTTP on the local network (no TLS). Put it behind your reverse proxy if you need HTTPS.
+
+DATA
+  data/app.db            the shared data (SQLite, WAL mode), next to server.py
+  data/backups/          a JSON copy every day; the last 30 are kept
+  Activity log           who changed what (the name people type in, before and after values), in data/app.db;
+                         downloadable as CSV from the app
+  Remove it completely:  stop it (Ctrl+C) and delete the folder. It writes nothing anywhere else: no registry,
+                         no services, no scheduled tasks.
+
+MACROS (VBA)
+  The workbook's macros do NOT run in Excel or Office. Sheetsmith translated them for a VBA interpreter written in
+  JavaScript that runs inside the browser page. It can only change the app's own cells and show messages.
+  It has no access to files, other programs, Shell, CreateObject (except Scripting.Dictionary), Declare/Windows
+  API, SendKeys or the network: those statements stop with an error instead.
+  This workbook: {{MACROS}}
+
+START AND STOP
+  Start:  python server.py   (or double-click "Start (Windows).bat" / start.command / start.sh)
+  Stop:   Ctrl+C in its window, or close the window.
+  As a service: run "python server.py --no-browser" from Task Scheduler, systemd or launchd if you want it
+  to start with the computer.
+
+QUESTIONS
+  Contact developer: https://arkvital.com

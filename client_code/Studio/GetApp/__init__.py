@@ -71,6 +71,7 @@ class GetApp(GetAppTemplate):
         state.heading(self.s2h, 3)
         port = v["port"]
         self.addr.text = "http://192.168.1.20:%s" % port
+        self.it_port.text = "TCP %s" % port
         term = self.dom_nodes["term"]
         term.textContent = ""
         prompt = window.document.createElement("span")
@@ -189,3 +190,17 @@ class GetApp(GetAppTemplate):
     @handle("html_button", "click")
     def html_button_click(self, **event_args):
         self._download(True, self.html_button)
+
+    @handle("it_button", "click")
+    def it_button_click(self, **event_args):
+        """Get the app -> For your IT team: FOR-IT.txt on its own (the same note is in the zip)."""
+        st = studio.cur()
+        self.it_button.enabled = False
+        try:
+            name = ss.SS.itNote(st.bp, st.js_settings())
+        except Exception as e:
+            state.toast("The note didn't download: %s" % e, "error")
+            return
+        finally:
+            self.it_button.enabled = True
+        state.toast("Downloaded %s. Send it to your IT team." % name, "ok")

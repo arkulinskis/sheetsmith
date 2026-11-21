@@ -13,6 +13,7 @@ Anyone who can reach this computer on the network can open the app, so use it on
 (home, office, workshop) and set a PIN if you want to keep it to your team.
 """
 import argparse
+import csv
 import datetime as dt
 import hashlib
 import hmac
@@ -198,18 +199,85 @@ def short(v):
     return s if len(s) <= 40 else s[:38] + "…"
 
 
-def describe(op, bp):
+NOTHING = object()
+
+
+def col_type(tb, col):
+    """The column's type from the app's screens (date, money, ...), so the Activity list can show dates as dates."""
+    for sc in (getattr(App, "data", None) or {}).get("app", {}).get("screens", []):
+        if sc.get("table") == tb:
+            for c in sc.get("columns") or []:
+                if c.get("name") == col:
+                    return c.get("type") or ""
+    return ""
+
+
+def nice(v, kind=""):
+    """A value for the Activity list: Excel date serials become dates in date columns."""
+    if isinstance(v, (int, float)) and not isinstance(v, bool) and kind in ("date", "datetime"):
+        try:
+            d = dt.datetime(1899, 12, 30) + dt.timedelta(days=float(v))
+            return d.strftime("%Y-%m-%d %H:%M") if kind == "datetime" else d.strftime("%Y-%m-%d")
+        except (OverflowError, ValueError):
+            pass
+    if isinstance(v, float) and v == int(v) and abs(v) < 1e15:
+        v = int(v)
+    elif isinstance(v, float):
+        v = round(v, 6)
+    return short(v)
+
+
+def cell_text(cell):
+    if not isinstance(cell, dict):
+        return None
+    return "=" + cell["f"] if cell.get("f") else cell.get("v")
+
+
+def old_value(state, op):
+    """What a cell held before this change (NOTHING when the change isn't about one value or one row)."""
+    t = op.get("t")
+    tables = state.get("tables", {})
+    if t in ("rset", "rdel"):
+        tb = tables.get(op.get("tb"))
+        row = next((r for r in tb["rows"] if r["id"] == op.get("id")), None) if tb else None
+        if row is None:
+            return NOTHING
+        if t == "rdel":
+            vals = [nice(cell_text(c)) for c in row["c"] if cell_text(c) not in (None, "")]
+            return ", ".join(vals[:3])
+        ci = op.get("ci")
+        if not isinstance(ci, int) or ci < 0:
+            return NOTHING
+        return cell_text(row["c"][ci]) if ci < len(row["c"]) else None
+    if t == "cell":
+        sc = state.get("sheets", {}).get(op.get("s"))
+        return cell_text(sc["cells"].get(op.get("a"))) if sc else NOTHING
+    return NOTHING
+
+
+def describe(op, bp, old=NOTHING):
     t = op.get("t")
     tables = {x["name"]: x for x in bp.get("tables", [])}
+    had = old is not NOTHING and old not in (None, "")
     if t == "cell":
-        return "changed %s!%s to %s" % (op.get("s"), op.get("a"), "=" + op["f"] if op.get("f") else short(op.get("v")))
+        new = "=" + op["f"] if op.get("f") else short(op.get("v"))
+        if had:
+            return "changed %s!%s from %s to %s" % (op.get("s"), op.get("a"), short(old), new)
+        return "changed %s!%s to %s" % (op.get("s"), op.get("a"), new)
     if t == "radd":
         return "added a row to %s" % op.get("tb")
     if t == "rset":
         tb = tables.get(op.get("tb"))
         col = tb["columns"][op["ci"]]["name"] if tb and op.get("ci", 99) < len(tb["columns"]) else "a column"
-        return "set %s › %s to %s" % (op.get("tb"), col, "=" + op["f"] if op.get("f") else short(op.get("v")))
+        kind = col_type(op.get("tb"), col)
+        new = "=" + op["f"] if op.get("f") else nice(op.get("v"), kind)
+        if had:
+            was = short(old) if isinstance(old, str) and old.startswith("=") else nice(old, kind)
+            return "changed %s › %s from %s to %s" % (op.get("tb"), col, was, new)
+        return "set %s › %s to %s" % (op.get("tb"), col, new)
     if t == "rdel":
+        if had:
+            return "deleted a row from %s (%s)" % (op.get("tb"), old)
         return "deleted a row from %s" % op.get("tb")
     if t == "rorder":
         return "sorted %s" % op.get("tb")
@@ -228,6 +296,10 @@ class Store(object):
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT)")
         self.db.execute("CREATE TABLE IF NOT EXISTS log (id INTEGER PRIMARY KEY AUTOINCREMENT, rev INTEGER, at TEXT, who TEXT, text TEXT)")
+        have = [r[1] for r in self.db.execute("PRAGMA table_info(log)")]
+        for col in ("tb", "rid"):  # which table and row a change was about (added 2026-11; older data.db files get them here)
+            if col not in have:
+                self.db.execute("ALTER TABLE log ADD COLUMN %s TEXT" % col)
         self.db.commit()
         row = self.db.execute("SELECT v FROM kv WHERE k='state'").fetchone()
         built = self.db.execute("SELECT v FROM kv WHERE k='built'").fetchone()
@@ -278,26 +350,64 @@ class Store(object):
             self.backup()
 
     def apply(self, ops, who, bp):
-        texts = []
+        entries = []  # (text, table, row id): the row lets each record show its own history
         changed = False
         for op in ops[:5000]:
-            if isinstance(op, dict) and apply_op(self.state, op):
+            if not isinstance(op, dict):
+                continue
+            old = old_value(self.state, op)
+            if apply_op(self.state, op):
                 changed = True
-                texts.append(describe(op, bp))
+                rid = str(op.get("id"))[:40] if op.get("t") in ("radd", "rset", "rdel") and op.get("id") else None
+                entries.append((describe(op, bp, old), op.get("tb") if rid else None, rid))
         if changed:
             self.rev += 1
             self.save()
             now = dt.datetime.now().isoformat(timespec="seconds")
-            rows = texts if len(texts) <= 12 else ["made %d changes (%s, ...)" % (len(texts), "; ".join(dict.fromkeys(texts[:3])))]
-            for t in rows:
-                self.db.execute("INSERT INTO log (rev, at, who, text) VALUES (?, ?, ?, ?)", (self.rev, now, who, t))
+            if len(entries) > 12:
+                tbs = set(e[1] for e in entries)
+                if all(e[0].startswith("added a row to ") for e in entries) and len(tbs) == 1:
+                    text = "added %d rows to %s" % (len(entries), entries[0][1])
+                else:
+                    text = "made %d changes (%s, ...)" % (len(entries), "; ".join(dict.fromkeys(e[0] for e in entries[:3])))
+                entries = [(text, tbs.pop() if len(tbs) == 1 else None, None)]
+            for text, tb, rid in entries:
+                self.db.execute("INSERT INTO log (rev, at, who, text, tb, rid) VALUES (?, ?, ?, ?, ?, ?)", (self.rev, now, who, text, tb, rid))
             self.db.commit()
             self.daily_backup()
         return changed
 
-    def log(self, limit):
-        rows = self.db.execute("SELECT rev, at, who, text FROM log ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
-        return [{"rev": r[0], "at": r[1], "who": r[2], "text": r[3]} for r in rows]
+    def log(self, limit, tb=None, rid=None, who=None, q=None):
+        """The latest changes, newest first; optionally one table's row, one person, or text containing q."""
+        where, args = [], []
+        if tb:
+            where.append("tb = ?")
+            args.append(tb)
+        if rid:
+            where.append("rid = ?")
+            args.append(rid)
+        if who:
+            where.append("who = ?")
+            args.append(who)
+        if q:
+            where.append("(text LIKE ? ESCAPE '\\' OR who LIKE ? ESCAPE '\\')")
+            like = "%" + re.sub(r"([%_\\])", r"\\\1", q) + "%"
+            args += [like, like]
+        sql = "SELECT rev, at, who, text, tb, rid FROM log" + (" WHERE " + " AND ".join(where) if where else "") + " ORDER BY id DESC LIMIT ?"
+        rows = self.db.execute(sql, args + [limit]).fetchall()
+        return [{"rev": r[0], "at": r[1], "who": r[2], "text": r[3], "tb": r[4], "rid": r[5]} for r in rows]
+
+    def people(self):
+        """Everyone who has changed something (for the Activity list's filter)."""
+        return [r[0] for r in self.db.execute("SELECT who FROM log GROUP BY who ORDER BY MAX(id) DESC LIMIT 60").fetchall() if r[0]]
+
+    def log_csv(self):
+        out = io.StringIO()
+        w = csv.writer(out)
+        w.writerow(["When", "Who", "Change", "Table", "Row id"])
+        for r in self.db.execute("SELECT at, who, text, tb, rid FROM log ORDER BY id DESC LIMIT 50000"):
+            w.writerow([x if x is not None else "" for x in r])
+        return ("﻿" + out.getvalue()).encode("utf-8")
 
 
 # --------------------------------------------------------------------------------------------- Excel export
@@ -596,7 +706,12 @@ class Handler(BaseHTTPRequestHandler):
                     limit = max(1, min(500, int(q.get("limit") or 100)))
                 except ValueError:
                     limit = 100
-                return self.send(200, {"items": st.log(limit)})
+                items = st.log(limit, tb=q.get("tb"), rid=q.get("id"), who=q.get("who"), q=(q.get("q") or "").strip()[:80])
+                return self.send(200, {"items": items, "people": st.people()})
+            if path == "/api/log.csv":
+                name = re.sub(r"[^A-Za-z0-9 _-]+", "", app.get("title") or "app").strip() or "app"
+                return self.send(200, st.log_csv(), "text/csv",
+                                 {"Content-Disposition": 'attachment; filename="%s activity %s.csv"' % (name, dt.date.today().isoformat())})
             if path == "/api/info":
                 port = self.server.server_address[1]
                 return self.send(200, {"title": app.get("title"), "rev": st.rev, "clients": len(CLIENTS), "started": STARTED.isoformat(timespec="seconds"),

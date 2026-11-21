@@ -40,7 +40,8 @@
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>', warn: '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>', stop: '<circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/>', moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
     user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>', copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
-    wifi: '<path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/>'
+    wifi: '<path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/>',
+    paste: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/>'
   };
   function icon(n, cls) { return '<svg class="ic ' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[n] || ICONS.table) + '</svg>'; }
   function toast(msg, kind) {
@@ -374,7 +375,7 @@
     }
     var total = rows.length;
     var addLabel = 'Add ' + singular(sc.label).toLowerCase();
-    var html = head(sc, total + ' ' + (total === 1 ? 'row' : 'rows') + (list.length !== total ? ' · showing ' + list.length : ''), (APP.readOnly ? '' : '<button class="btn primary" data-new>' + icon('plus') + esc(addLabel) + '</button>'));
+    var html = head(sc, total + ' ' + (total === 1 ? 'row' : 'rows') + (list.length !== total ? ' · showing ' + list.length : ''), (APP.readOnly ? '' : '<button class="btn" data-paste title="Copy rows in Excel and paste them here">' + icon('paste') + 'Paste rows</button><button class="btn primary" data-new>' + icon('plus') + esc(addLabel) + '</button>'));
     html += '<div class="toolbar"><label class="search">' + icon('search') + '<input type="search" data-q placeholder="Search ' + esc(sc.label.toLowerCase()) + '" value="' + esc(st.q) + '" aria-label="Search"></label>';
     if (statusCol && Object.keys(counts).length > 1 && Object.keys(counts).length <= 12) {
       html += '<div class="chips"><button class="chip ' + (!st.status ? 'on' : '') + '" data-status="">All<b>' + total + '</b></button>' + Object.keys(counts).map(function (k) {
@@ -488,10 +489,26 @@
       return '<label class="field' + (wide ? ' wide' : '') + '" data-f="' + c.j + '"><span>' + esc(c.label || c.name) + (req ? '<em>*</em>' : '') + (c.type === 'formula' ? ' <span class="faint small">calculated</span>' : '') + '</span>' +
         editorFor(c, v, opts, fmt) + (hint ? '<div class="hint">' + esc(hint) + '</div>' : '') + '<div class="err" hidden></div></label>';
     }).join('');
-    var m = modal('<h2>' + esc(isNew ? 'New ' + singular(sc.label).toLowerCase() : titleVal || singular(sc.label)) + '</h2><form data-rec novalidate><div class="fields2">' + fields + '</div>' +
+    var hist = !isNew && MODE === 'server' ? '<details class="hist" data-hist><summary>' + icon('clock') + 'History <span class="faint small">who changed what</span></summary><div class="hist-list"><p class="small muted">Loading…</p></div></details>' : '';
+    var m = modal('<h2>' + esc(isNew ? 'New ' + singular(sc.label).toLowerCase() : titleVal || singular(sc.label)) + '</h2><form data-rec novalidate><div class="fields2">' + fields + '</div>' + hist +
       '<div class="foot">' + (!isNew && !APP.readOnly ? '<button type="button" class="btn danger left" data-del>' + icon('trash') + 'Delete</button>' : '') +
       '<button type="button" class="btn" data-close>Cancel</button>' + (APP.readOnly ? '' : '<button class="btn primary">' + (isNew ? 'Add' : 'Save') + '</button>') + '</div></form>', { wide: true, onclose: function () { renderScreen(); } });
     var form = m.el.querySelector('form');
+    var histEl = m.el.querySelector('[data-hist]');
+    if (histEl) histEl.addEventListener('toggle', function () {
+      if (!histEl.open || histEl.getAttribute('data-loaded')) return;
+      histEl.setAttribute('data-loaded', '1');
+      var list = histEl.querySelector('.hist-list');
+      store.api('api/log?limit=60&tb=' + encodeURIComponent(t.name) + '&id=' + encodeURIComponent(rowId)).then(function (d) {
+        var items = d.items || [];
+        if (!items.length) { list.innerHTML = '<p class="small muted">No changes recorded for this ' + esc(singular(sc.label).toLowerCase()) + ' yet. Changes made from now on show here.</p>'; return; }
+        var prefix = new RegExp('^(set|changed) ' + t.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' › ');
+        list.innerHTML = items.map(function (it) {
+          var text = /^added a row to /.test(it.text) ? 'added this ' + singular(sc.label).toLowerCase() : it.text.replace(prefix, '');
+          return logRow(it, text);
+        }).join('');
+      }, function () { list.innerHTML = '<p class="small muted">The history isn\'t available right now.</p>'; histEl.removeAttribute('data-loaded'); });
+    });
     // live calculated fields
     var calcCols = cols.filter(function (c) { return c.type === 'formula'; });
     var preview = function () {
@@ -571,6 +588,126 @@
       });
     });
   }
+  /* ------------------------------------------------------------------------------------ paste rows */
+  /* Rows copied from Excel (tab-separated) or a CSV file's text: matched to the table's columns by their headings
+     (or filled in order when there's no heading row), rows the table already has are skipped, then added in one go.
+     The way to bring the stray copies of a workbook (emailed, "final_v3") into the one shared app. */
+  function parseGrid(text) {
+    text = String(text || '').replace(/\r\n?/g, '\n');
+    var line1 = text.split('\n')[0] || '';
+    var sep = line1.indexOf('\t') >= 0 ? '\t' : line1.split(';').length > line1.split(',').length ? ';' : ',';
+    var rows = [], row = [], cell = '', quoted = false;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (quoted) {
+        if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else quoted = false; } else cell += ch;
+      } else if (ch === '"' && cell === '') quoted = true;
+      else if (ch === sep) { row.push(cell); cell = ''; }
+      else if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += ch;
+    }
+    row.push(cell); rows.push(row);
+    return rows.filter(function (r) { return r.some(function (c) { return c.trim() !== ''; }); });
+  }
+  function normName(s) { return String(s || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ''); }
+  function plainVal(v) { return v && typeof v === 'object' && 'v' in v ? v.v : v; }
+  function pasteValue(c, s) {
+    s = String(s == null ? '' : s).trim();
+    if (s === '') return null;
+    if (c.type === 'bool') return /^(yes|y|true|1|x|✓|✔|oui|ja|jā|si|sí|да)$/i.test(s);
+    if (c.type === 'percent' && !/%$/.test(s)) { var p = SE.toNum(s); if (typeof p === 'number') return Math.abs(p) > 1 ? p / 100 : p; }
+    var v = SE.parseInput(s, c.fmt || DEFAULT_FMT[c.type] || null);
+    return typeof v === 'string' && v[0] === '=' ? { v: v } : v;  // pasted text that starts with = stays text
+  }
+  function keyPart(v) {
+    v = plainVal(v);
+    if (v == null || v === '') return '';
+    if (typeof v === 'number') return String(+v.toFixed(6));
+    return SE.toStr(v).trim().toLowerCase();
+  }
+  function pasteRows(sc) {
+    var t = wb.tableByName(sc.table);
+    if (!t || APP.readOnly) return;
+    var cols = colSpecs(sc, t).filter(function (c) { return c.type !== 'formula' && !(t.columns[c.j] || {}).calc; });
+    var sample = cols.filter(function (c) { return !c.hidden; }).slice(0, 4).map(function (c) { return c.label || c.name; }).join('    ');
+    var m = modal('<h2>Paste rows into ' + esc(sc.label) + '</h2>' +
+      '<p class="muted">Copy rows in Excel (or in another copy of this workbook) with the heading row, then paste them here. Columns are matched by their headings.</p>' +
+      '<label class="field"><span>Rows</span><textarea class="paste-box" data-pastebox rows="7" spellcheck="false" autocomplete="off" placeholder="' + esc(sample) + '"></textarea></label>' +
+      '<div class="paste-sum" aria-live="polite"></div>' +
+      '<label class="toggle" data-dupwrap hidden><input type="checkbox" data-dups> Add the rows I already have too</label>' +
+      '<div class="foot"><button type="button" class="btn" data-close>Cancel</button><button type="button" class="btn primary" data-go disabled>' + icon('plus') + '<span>Add rows</span></button></div>', { wide: true });
+    var box = m.el.querySelector('[data-pastebox]'), sum = m.el.querySelector('.paste-sum'), go = m.el.querySelector('[data-go]');
+    var dups = m.el.querySelector('[data-dups]'), dupWrap = m.el.querySelector('[data-dupwrap]'), plan = null, timer;
+    function count() { return plan ? plan.fresh.length + (dups.checked ? plan.dup.length : 0) : 0; }
+    function label() {
+      var n = count();
+      go.querySelector('span').textContent = !plan ? 'Add rows' : n ? 'Add ' + n + ' ' + (n === 1 ? 'row' : 'rows') : 'Nothing new to add';
+      go.disabled = !n;
+    }
+    function analyse() {
+      var grid = parseGrid(box.value);
+      if (!grid.length) { plan = null; sum.innerHTML = ''; dupWrap.hidden = true; label(); return; }
+      var byName = {};
+      cols.forEach(function (c) { byName[normName(c.name)] = c; if (c.label) byName[normName(c.label)] = c; });
+      var heads = grid[0].map(function (h) { return byName[normName(h)] || null; });
+      var hasHead = heads.some(Boolean), map, body, unused = [];
+      if (hasHead) {
+        map = heads; body = grid.slice(1);
+        grid[0].forEach(function (h, i) { if (!heads[i] && h.trim()) unused.push(h.trim()); });
+      } else {
+        var vis = cols.filter(function (c) { return !c.hidden; });
+        map = grid[0].map(function (x, i) { return vis[i] || null; }); body = grid;
+      }
+      var taken = {};
+      map = map.map(function (c) { if (!c || taken[c.j]) return null; taken[c.j] = 1; return c; });
+      var used = map.filter(Boolean), tooMany = body.length > 2000;
+      body = body.slice(0, 2000);
+      var keys = {};
+      wb.rows(t).forEach(function (row, i) { keys[used.map(function (c) { return keyPart(wb.value(t.sheet, t._d1 + i, t._c1 + c.j)); }).join('\u0001')] = 1; });
+      var fresh = [], dup = [];
+      body.forEach(function (cells) {
+        var values = t.columns.map(function () { return null; }), any = false;
+        map.forEach(function (c, i) { if (!c) return; var v = pasteValue(c, cells[i]); if (v != null) any = true; values[c.j] = v; });
+        if (!any) return;
+        var k = used.map(function (c) { return keyPart(values[c.j]); }).join('\u0001');
+        (keys[k] ? dup : fresh).push(values);
+        keys[k] = 1;
+      });
+      plan = { fresh: fresh, dup: dup };
+      var html = '<p class="paste-count"><b>' + fresh.length + '</b> new ' + (fresh.length === 1 ? 'row' : 'rows') + (dup.length ? ' · <b>' + dup.length + '</b> already in the list (skipped)' : '') + '</p>';
+      html += hasHead ? '<p class="small"><span class="muted">Matched:</span> ' + esc(used.map(function (c) { return c.label || c.name; }).join(', ')) + '</p>'
+        : used.length ? '<p class="small muted">No heading row found, so the columns are filled in order: ' + esc(used.map(function (c) { return c.label || c.name; }).join(', ')) + '.</p>' : '';
+      if (unused.length) html += '<p class="small muted">Not used (no column with that name): ' + esc(unused.slice(0, 8).join(', ')) + (unused.length > 8 ? '…' : '') + '</p>';
+      if (tooMany) html += '<p class="small warn-text">Only the first 2000 rows are added at a time. Paste the rest afterwards.</p>';
+      var show3 = fresh.slice(0, 3);
+      if (show3.length && used.length) {
+        html += '<div class="paste-prev" tabindex="0" role="region" aria-label="First rows"><table class="data"><thead><tr>' + used.map(function (c) { return '<th>' + esc(c.label || c.name) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+          show3.map(function (vals) { return '<tr>' + used.map(function (c) { return '<td>' + esc(show(plainVal(vals[c.j]), fmtFor(c, null), c.type)) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>' +
+          (fresh.length > 3 ? '<p class="small muted">…and ' + (fresh.length - 3) + ' more.</p>' : '');
+      }
+      sum.innerHTML = html;
+      dupWrap.hidden = !dup.length;
+      label();
+    }
+    box.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(analyse, 150); });
+    dups.addEventListener('change', label);
+    go.addEventListener('click', function () {
+      clearTimeout(timer); analyse();
+      if (!plan || !count()) return;
+      var rows = plan.fresh.concat(dups.checked ? plan.dup : []), first = t._d1 + wb.rows(t).length, ops = [];
+      rows.forEach(function (values) { ops.push(wb.addRow(t, values)); });
+      var last = t._d1 + wb.rows(t).length - 1, rng = { sheet: t.sheet, r1: first, c1: t._c1, r2: last, c2: t._c2 };
+      store.send(ops).then(function () {
+        if (APP.events === false || !machine) return;
+        return machine.fire('Worksheet_Change', t.sheet, rng).then(function (r) { return applyResult(r, true); })
+          .then(function () { return machine.fire('Workbook_SheetChange', t.sheet, rng); }).then(function (r) { return applyResult(r, true); });
+      }).then(function () { renderScreen(); });
+      m.close();
+      renderScreen();
+      toast('Added ' + rows.length + ' ' + (rows.length === 1 ? 'row' : 'rows') + ' to ' + sc.label, 'good');
+    });
+  }
+
   function confirmBox(text, ok, danger) {
     return new Promise(function (resolve) {
       var answered = false;
@@ -751,16 +888,41 @@
   }
 
   /* ------------------------------------------------------------------------------------ activity */
+  function logWhen(at) { return new Date(at).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+  function logRow(it, text) {
+    return '<div class="row"><span class="who">' + esc(it.who || 'Someone') + '</span><span class="what">' + esc(text == null ? it.text : text) + '</span><span class="when">' + esc(logWhen(it.at)) + '</span></div>';
+  }
+  /* Who changed what, newest first: search the changes, pick one person, or download the whole log for Excel. */
   function activity(view) {
     document.title = 'Activity · ' + APP.title;
-    view.innerHTML = '<div class="head"><div class="grow"><h1>' + icon('clock') + 'Activity</h1><p>The latest changes, by everyone using this app.</p></div></div><div class="card log"><div class="empty">Loading…</div></div>';
-    store.api('api/log?limit=150').then(function (d) {
-      var box = view.querySelector('.log');
-      if (!d.items.length) { box.innerHTML = '<div class="empty">' + icon('clock') + '<h3>No changes yet</h3></div>'; return; }
-      box.innerHTML = d.items.map(function (it) {
-        return '<div class="row"><span class="who">' + esc(it.who || 'Someone') + '</span><span>' + esc(it.text) + '</span><span class="when">' + esc(new Date(it.at).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + '</span></div>';
-      }).join('');
-    }, function () { view.querySelector('.log').innerHTML = '<div class="empty">The activity log isn\'t available right now.</div>'; });
+    if (view.querySelector('[data-logq]') && view.ssReloadLog) { view.ssReloadLog(); return; }  // a change came in: refresh the list, keep the search box (and its focus)
+    var f = ui.activity = ui.activity || { q: '', who: '' };
+    view.innerHTML = '<div class="head"><div class="grow"><h1>' + icon('clock') + 'Activity</h1><p>Every change, by everyone using this app: who, what it was before and after, and when.</p></div>' +
+      '<div class="actions"><a class="btn" href="api/log.csv" download>' + icon('down') + 'Download (.csv)</a></div></div>' +
+      '<div class="toolbar"><label class="search">' + icon('search') + '<input type="search" data-logq placeholder="Search changes (a name, a column, a value)" value="' + esc(f.q) + '" aria-label="Search changes"></label>' +
+      '<label class="logwho"><select data-logwho aria-label="Person"><option value="">Everyone</option></select></label></div>' +
+      '<div class="card log"><div class="empty">Loading…</div></div>';
+    var box = view.querySelector('.log'), qIn = view.querySelector('[data-logq]'), whoIn = view.querySelector('[data-logwho]'), timer, ask = 0;
+    function load() {
+      var n = ++ask;
+      var url = 'api/log?limit=300' + (f.q ? '&q=' + encodeURIComponent(f.q) : '') + (f.who ? '&who=' + encodeURIComponent(f.who) : '');
+      store.api(url).then(function (d) {
+        if (n !== ask || !view.isConnected) return;
+        var people = d.people || [];
+        if (f.who && people.indexOf(f.who) < 0) people.unshift(f.who);
+        whoIn.innerHTML = '<option value="">Everyone</option>' + people.map(function (p) { return '<option' + (p === f.who ? ' selected' : '') + '>' + esc(p) + '</option>'; }).join('');
+        var items = d.items || [];
+        if (!items.length) {
+          box.innerHTML = '<div class="empty">' + icon('clock') + (f.q || f.who ? '<h3>No changes match</h3><p>Try another word, or Everyone.</p>' : '<h3>No changes yet</h3><p>Changes people make show here, with their name.</p>') + '</div>';
+          return;
+        }
+        box.innerHTML = items.map(function (it) { return logRow(it); }).join('') + (items.length >= 300 ? '<p class="small muted log-more">Showing the latest 300. Download the .csv for everything.</p>' : '');
+      }, function () { if (n === ask) box.innerHTML = '<div class="empty">The activity log isn\'t available right now.</div>'; });
+    }
+    qIn.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(function () { f.q = qIn.value.trim(); load(); }, 250); });
+    whoIn.addEventListener('change', function () { f.who = whoIn.value; load(); });
+    view.ssReloadLog = load;
+    load();
   }
 
   /* ------------------------------------------------------------------------------------ menus */
@@ -838,6 +1000,7 @@
       var mac = el.closest('[data-macro]');
       if (mac) { e.preventDefault(); runMacro(mac.getAttribute('data-macro'), mac.getAttribute('data-label'), mac); return; }
       if (el.closest('[data-new]') && current && current.kind === 'table') { openRecord(current, null); return; }
+      if (el.closest('[data-paste]') && current && current.kind === 'table') { pasteRows(current); return; }
       var row = el.closest('[data-row]');
       if (row && current && current.kind === 'table' && !el.closest('.modal')) { openRecord(current, row.getAttribute('data-row')); return; }
       var srt = el.closest('[data-sort]');

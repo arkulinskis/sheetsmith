@@ -115,7 +115,7 @@ try:
     st, lg, _ = http(base + "/api/log")
     texts = [i["text"] for i in lg["items"]]
     assert any("added a row to Orders" in t for t in texts) and lg["items"][-1]["who"] == "Tess Tester", lg
-    assert any("Orders › Status to Baking" in t for t in texts)
+    assert any("Orders › Status from New to Baking" in t for t in texts), texts  # before -> after (2026-11-20)
     st, xl, hd = http(base + "/api/export.xlsx", raw=True)
     assert st == 200 and xl[:2] == b"PK" and "attachment" in hd.get("Content-Disposition", "")
     back = WorkbookReader.read_workbook(xl, "export.xlsx")

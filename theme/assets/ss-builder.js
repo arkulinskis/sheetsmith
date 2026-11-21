@@ -11,7 +11,7 @@
 (function () {
   'use strict';
   var SS = window.SS = {};
-  var RT_NAMES = ['rt-formula.js', 'rt-vba.js', 'rt-app.js', 'rt-app.css', 'rt-server.py.txt', 'rt-readme.txt', 'rt-start.bat.txt', 'rt-start.sh.txt'];
+  var RT_NAMES = ['rt-formula.js', 'rt-vba.js', 'rt-app.js', 'rt-app.css', 'rt-server.py.txt', 'rt-readme.txt', 'rt-start.bat.txt', 'rt-start.sh.txt', 'rt-for-it.txt'];
   var rt = null;
   /* Forms version: each runtime file's URL (with its ?v= hash) comes from head_html: the <script> tags of
      rt-formula.js / rt-vba.js and <meta name="ss-asset"> for the others (tools/assets.py keeps the hashes current). */
@@ -179,8 +179,30 @@
         { name: dir + 'README.txt', text: fill(R['rt-readme.txt']).replace(/\r?\n/g, '\r\n') },
         { name: dir + 'Start (Windows).bat', text: fill(R['rt-start.bat.txt']).replace(/\r?\n/g, '\r\n') },
         { name: dir + 'start.command', text: fill(R['rt-start.sh.txt']), exec: true },
-        { name: dir + 'start.sh', text: fill(R['rt-start.sh.txt']), exec: true }
+        { name: dir + 'start.sh', text: fill(R['rt-start.sh.txt']), exec: true },
+        { name: dir + 'FOR-IT.txt', text: itText(R, bp, st).replace(/\r?\n/g, '\r\n') }
       ];
+    });
+  };
+  /* FOR-IT.txt: what the app and server.py do, for the IT team that has to approve it (macros blocked by policy
+     is a common reason a workbook can't be shared). Filled from the blueprint and the person's settings. */
+  function itText(R, bp, st) {
+    st = st || {};
+    var an = SS.analysis(bp), app = SS.merge(bp, st), port = +(st.port || 8080), pin = st.pin || '', v = an.vba;
+    var macros = !v.procs.length ? 'no macros.' :
+      v.procs.length + ' procedure' + (v.procs.length === 1 ? '' : 's') + ': ' + v.ok + ' run as they are' + (v.partial ? ', ' + v.partial + ' partly' : '') +
+      (v.no ? ', ' + v.no + ' can\'t run (they use files, other programs or the network)' : '') + '.' + (st.macros === false ? ' Macros are switched off in this download.' : '');
+    return R['rt-for-it.txt'].split('{{TITLE}}').join(app.title).split('{{FILE}}').join((bp.file && bp.file.name) || 'a workbook')
+      .split('{{DATE}}').join(new Date().toISOString().slice(0, 10)).split('{{PORT_MAX}}').join(String(port + 14)).split('{{PORT}}').join(String(port))
+      .split('{{PIN_LINE}}').join(pin ? 'a PIN is required (set in this download; change it with --pin).' : 'anyone on the network can open it. Add a PIN with: python server.py --pin 4821')
+      .split('{{MACROS}}').join(macros);
+  }
+  /* Just the IT note (Get the app -> For your IT team). Resolves to the file name. */
+  SS.itNote = function (bp, st) {
+    return SS.runtime().then(function (R) {
+      var name = SS.slug(st.title || bp.app.title) + ' FOR-IT.txt';
+      SS.save(name, new Blob([itText(R, bp, st).replace(/\r?\n/g, '\r\n')], { type: 'text/plain' }));
+      return name;
     });
   };
 

@@ -7,6 +7,7 @@ WHAT'S IN THIS FOLDER
   Start (Windows).bat    double-click this on Windows
   start.command          double-click this on a Mac
   start.sh               Linux or Raspberry Pi:  sh start.sh
+  FOR-IT.txt             what the app and server do, for your IT team (network, data, macros)
 
 START IT
   1. Put this folder on the computer that will share the app. It has to stay on while people use the app.

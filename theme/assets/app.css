@@ -703,6 +703,10 @@ html.ui-modal-open { overflow: hidden; }
 .st-files li { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--c-line); }
 .st-files li span { color: var(--c-muted); margin-left: auto; white-space: nowrap; }
 .st-data-note { margin-top: 12px; }
+.st-it { grid-column: 1 / -1; }
+.ui .st-it-lead { margin: 0 0 10px; color: var(--c-muted); max-width: 70ch; }
+.st-it-list { margin: 0 0 14px; padding-left: 1.1em; display: grid; gap: 6px; max-width: 80ch; }
+.st-it-list li { overflow-wrap: anywhere; }
 .dlg-more .ui-stack { margin-top: 6px; }
 @media (max-width: 860px) {
   .st-two, .st-get { grid-template-columns: 1fr; }
